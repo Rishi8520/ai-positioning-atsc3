@@ -1,0 +1,108 @@
+Created virtual environment, upgraded pip via pip install --upgrade pip 
+Created requirements.txt
+
+Installed pytorch for CPU via 
+pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
+
+Ran the requirements.txt script via 
+pip install -r requirements.txt
+
+Verified the installation setup by running the script
+python verify_setup.py
+
+Installed the RTKLIB via
+cd ~
+mkdir -p tools
+cd tools
+git clone https://github.com/tomojitakasu/RTKLIB.git
+cd RTKLIB
+ls 
+cd app/
+
+# Compile rnx2rtkp (RTK post-processing - most important for your project)
+cd rnx2rtkp/gcc
+make clean
+make
+ls -lh rnx2rtkp
+# Go back and compile rtkrcv (RTK server/receiver)
+cd ../../rtkrcv/gcc
+make clean
+make
+ls -lh rtkrcv
+# Go back and compile str2str (stream converter)
+cd ../../str2str/gcc
+make clean
+make
+ls -lh str2str
+# Go back and compile convbin (RINEX converter - useful for data processing)
+cd ../../convbin/gcc
+make clean
+make
+ls -lh convbin
+# Add to your .bashrc for permanent access
+echo '' >> ~/.bashrc
+echo '# RTKLIB paths for AI-Positioning PoC' >> ~/.bashrc
+echo 'export PATH="$HOME/tools/RTKLIB/app/rnx2rtkp/gcc:$PATH"' >> ~/.bashrc
+echo 'export PATH="$HOME/tools/RTKLIB/app/rtkrcv/gcc:$PATH"' >> ~/.bashrc
+echo 'export PATH="$HOME/tools/RTKLIB/app/str2str/gcc:$PATH"' >> ~/.bashrc
+echo 'export PATH="$HOME/tools/RTKLIB/app/convbin/gcc:$PATH"' >> ~/.bashrc
+echo 'export RTKLIB_HOME="$HOME/tools/RTKLIB"' >> ~/.bashrc
+# Reload .bashrc
+source ~/.bashrc
+#Return to the directory via
+cd /media/rishi/New\ SSD/PROJECT_AND_RESEARCH/BUILD-A-THON_4/CODE
+source venv/bin/activate
+Run the test_rtklib.py script via python rtklib.py
+
+Created folders:
+broadcast/tests/
+gnss/tests/
+ai/tests/
+
+Created files:
+__init__.py in the directories :
+broadcast and broadcast/tests
+gnss and gnss/tests
+ai and ai/tests
+
+Verified them by the command 
+(venv) rishi@LOQ-15ARP9:/media/rishi/New SSD/PROJECT_AND_RESEARCH/BUILD-A-THON_4/CODE$ python -c "from setuptools import find_packages; print(find_packages())"
+Got the output:
+['ai', 'broadcast', 'gnss', 'ai.tests', 'broadcast.tests', 'gnss.tests']
+
+In the broadcast directory, namely:
+__init__.py ; config.py ; utils.py ; alpencoder.py
+
+In the broadcast/test directory, namely:
+__init__.py ; test_alpencoder.py
+
+Created a file setup.py in the CODE directory and ran the command pip install -e.
+Now run the command 
+pytest broadcast/tests/test_alpencoder.py -v # to verify all the test cases pass or not
+
+Create a file fecencoder.py in the broadcast directory and test_fecencoder.py in broadcast/test
+directory
+Ran the file test_fecencoder.py file via:
+pytest broadcast/tests/test_fecencoder.py -v
+This passed all the 17 test cases
+
+Created a file framebuilder.py in the broadcast directory and test_framebuilder.py in broadcast/tests
+directory.
+Ran the file test_framebuilder.py file via:
+pytest broadcast/tests/test_framebuilder.py -v
+This passes all the 24 test cases
+
+Did the same for ofdmmodulator.pu and test_ofdmmodulator.py file and ran it via:
+pytest broadcast/tests/test_ofdmmodulator.py -v
+
+Created a file called pipeline.py file and test_pipleline.py file and ran it via:
+pytest broadcast/tests/test_pipeline.py -v
+
+Ran all the files together via:
+pytest broadcast/tests/ -v
+
+Created a file demo_broadcast_pipleline.py file outside the "broadcast" directory but inside the "CODE" directory
+Ran it via:
+python demo_broadcast_pipeline.py
+
+Created a directory inside the OUTPUTs directory named as Video where all screen-recordings shall be pushed.
