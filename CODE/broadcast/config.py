@@ -32,11 +32,53 @@ class FECCodeRate(Enum):
     RATE_12_15 = 12/15
     RATE_13_15 = 13/15
 
+class ModulationScheme(Enum):
+    """ATSC 3.0 modulation schemes."""
+    BPSK = 1
+    QPSK = 2
+    QAM16 = 4
+    QAM64 = 6
+    QAM256 = 8
+
+
+class GuardInterval(Enum):
+    """OFDM guard interval ratios."""
+    GI_1_4 = 192    # 1/4 of symbol duration
+    GI_1_8 = 384    # 1/8 of symbol duration
+    GI_1_16 = 768   # 1/16 of symbol duration
+    GI_1_32 = 1536  # 1/32 of symbol duration
+
+
+class FFTSize(Enum):
+    """OFDM FFT sizes for ATSC 3.0."""
+    FFT_8K = 8192
+    FFT_16K = 16384
+    FFT_32K = 32768
+
 class PLPMode(Enum):
     """PLP (Physical Layer Pipe) modes."""
     STANDARD = "standard"
     MOBILE = "mobile"
     HIGH_CAPACITY = "high_capacity"
+
+class PilotPattern(Enum):
+    """ATSC 3.0 scattered pilot patterns (A/322 Table 9.3)."""
+    SP3_2 = (3, 2)    # Dx=3, Dy=2
+    SP3_4 = (3, 4)    # Dx=3, Dy=4 (most common)
+    SP4_2 = (4, 2)    # Dx=4, Dy=2
+    SP4_4 = (4, 4)    # Dx=4, Dy=4
+    SP6_2 = (6, 2)    # Dx=6, Dy=2
+    SP6_4 = (6, 4)    # Dx=6, Dy=4
+    SP8_2 = (8, 2)    # Dx=8, Dy=2
+    SP8_4 = (8, 4)    # Dx=8, Dy=4
+    SP12_2 = (12, 2)  # Dx=12, Dy=2
+    SP12_4 = (12, 4)  # Dx=12, Dy=4
+    SP16_2 = (16, 2)  # Dx=16, Dy=2
+    SP16_4 = (16, 4)  # Dx=16, Dy=4
+    SP24_2 = (24, 2)  # Dx=24, Dy=2
+    SP24_4 = (24, 4)  # Dx=24, Dy=4
+    SP32_2 = (32, 2)  # Dx=32, Dy=2
+    SP32_4 = (32, 4)  # Dx=32, Dy=4
 
 @dataclass
 class BroadcastConfig:
