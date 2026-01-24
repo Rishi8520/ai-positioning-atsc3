@@ -1,0 +1,54 @@
+# Python Virtual Environment
+venv/
+env/
+ENV/
+
+# Python Cache Files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# pytest cache
+.pytest_cache/
+
+# Python egg files
+*.egg-info/
+dist/
+build/
+*.egg
+
+# IDE and Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Environment variables
+.env
+.env.local
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# Coverage reports
+.coverage
+htmlcov/
+*.cover
+
+# PyTorch model files (we'll add these later when models get large)
+# *.pth
+# *.pt
+
+# Large data files (we'll add specific ones later)
+# data/scenarios/*.dat
+# data/scenarios/*.bin

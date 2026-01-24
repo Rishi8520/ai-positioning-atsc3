@@ -1,0 +1,73 @@
+# ============================================
+# BROADCAST TEAM DEPENDENCIES
+# ============================================
+# ATSC 3.0 Broadcast Processing
+scikit-commpy>=0.8.0       # LDPC encoding (maintained fork)
+reedsolo>=1.7.0            # Reed-Solomon FEC
+numpy>=1.24.0,<2.0.0       # Numerical processing & OFDM
+scipy>=1.10.0              # Signal processing
+
+# ============================================
+# GNSS TEAM DEPENDENCIES
+# ============================================
+# GNSS Processing & RTK
+# Note: RTKLIB is C-based, will be handled separately
+pyproj>=3.5.0              # Coordinate transformations
+georinex>=1.16.0           # RINEX file parsing (GNSS observation format)
+Pillow>=10.0.0             # Bitmap/tile generation (PIL)
+
+# ============================================
+# AI/ML TEAM DEPENDENCIES
+# ============================================
+# Deep Learning & Model Training
+# PyTorch will be installed separately with CPU-specific command
+
+# Model Export & Inference
+onnx>=1.14.0               # ONNX model format
+onnxruntime>=1.15.0        # ONNX runtime for inference
+
+# ML Utilities & Data Processing
+scikit-learn>=1.3.0        # Preprocessing, validation, metrics
+pandas>=2.0.0              # Data manipulation
+joblib>=1.3.0              # Model serialization
+
+# ============================================
+# VISUALIZATION & ANALYSIS
+# ============================================
+matplotlib>=3.7.0          # Plotting & visualization
+seaborn>=0.12.0            # Statistical visualization
+
+# ============================================
+# DEVELOPMENT & TESTING
+# ============================================
+pytest>=7.4.0              # Unit testing framework
+pytest-cov>=4.1.0          # Test coverage
+black>=23.0.0              # Code formatting
+flake8>=6.0.0              # Code linting
+
+# ============================================
+# DATA FORMATS & I/O
+# ============================================
+h5py>=3.9.0                # HDF5 file format for large datasets
+pyarrow>=12.0.0            # Parquet file format (efficient storage)
+
+# ============================================
+# API & ORCHESTRATION
+# ============================================
+flask>=2.3.0               # REST API framework (for orchestration layer)
+flask-cors>=4.0.0          # CORS support for API
+requests>=2.31.0           # HTTP client for API calls
+
+# ============================================
+# JUPYTER & NOTEBOOKS
+# ============================================
+jupyter>=1.0.0             # Jupyter notebook server
+ipykernel>=6.25.0          # IPython kernel for Jupyter
+notebook>=7.0.0            # Jupyter notebook interface
+
+# ============================================
+# CONFIGURATION & UTILITIES
+# ============================================
+pyyaml>=6.0                # YAML configuration files
+python-dotenv>=1.0.0       # Environment variable management
+tqdm>=4.65.0               # Progress bars
