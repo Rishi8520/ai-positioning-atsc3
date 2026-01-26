@@ -21,6 +21,8 @@ Pillow>=10.0.0             # Bitmap/tile generation (PIL)
 # ============================================
 # Deep Learning & Model Training
 # PyTorch will be installed separately with CPU-specific command
+transformers>=4.20.0
+tensorboard>=2.8.0
 
 # Model Export & Inference
 onnx>=1.14.0               # ONNX model format

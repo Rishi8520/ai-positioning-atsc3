@@ -106,3 +106,9 @@ Ran it via:
 python demo_broadcast_pipeline.py
 
 Created a directory inside the OUTPUTs directory named as Video where all screen-recordings shall be pushed.
+
+26/01/2025
+Created three scripts for generating, validating and visulalizing the systhetic dataset in
+the CODE/ai/ directory.
+
+Then created a new file ai_broadcast_decision_maodel_v2.py and test_model_v2.py file 
