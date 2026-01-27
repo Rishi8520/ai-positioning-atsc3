@@ -1,0 +1,20 @@
+{
+  "elapsed_sec": 0.09317803382873535,
+  "inputs": {
+    "base_obs": "/Users/anirudhnishtala/Desktop/ai-positioning-atsc3-main/DATA/scenarios/scenario1/base.obs",
+    "corrections": "/Users/anirudhnishtala/Desktop/ai-positioning-atsc3-main/OUTPUTS/rtcms.bin",
+    "nav_file": "/Users/anirudhnishtala/Desktop/ai-positioning-atsc3-main/DATA/scenarios/scenario1/nav.nav",
+    "rover_obs": "/Users/anirudhnishtala/Desktop/ai-positioning-atsc3-main/DATA/scenarios/scenario1/rover.obs",
+    "scenario": "scenario1"
+  },
+  "outputs": {
+    "metrics_csv": "OUTPUTS/scenario1/scenario1_with_corrections_20260126T230538Z/metrics.csv",
+    "metrics_json": "OUTPUTS/scenario1/scenario1_with_corrections_20260126T230538Z/metrics.json",
+    "pos_file": "OUTPUTS/scenario1/scenario1_with_corrections_20260126T230538Z/solution.pos"
+  },
+  "rtk_conf_file": "OUTPUTS/scenario1/scenario1_with_corrections_20260126T230538Z/rtk_options.conf",
+  "rtklib_binary": "/Users/anirudhnishtala/RTKLIB/app/rnx2rtkp/gcc/rnx2rtkp",
+  "rtklib_stderr": "invalid option value pos1-posmode (OUTPUTS/scenario1/scenario1_with_corrections_20260126T230538Z/rtk_options.conf:1)\ninvalid option value pos1-frequency (OUTPUTS/scenario1/scenario1_with_corrections_20260126T230538Z/rtk_options.conf:2)\ninvalid option value pos1-soltype (OUTPUTS/scenario1/scenario1_with_corrections_20260126T230538Z/rtk_options.conf:3)\ninvalid option value pos2-armode (OUTPUTS/scenario1/scenario1_with_corrections_20260126T230538Z/rtk_options.conf:6)\ninvalid option value out-solformat (OUTPUTS/scenario1/scenario1_with_corrections_20260126T230538Z/rtk_options.conf:13)\ninvalid option value out-outhead (OUTPUTS/scenario1/scenario1_with_corrections_20260126T230538Z/rtk_options.conf:14)\ninvalid option value out-outopt (OUTPUTS/scenario1/scenario1_with_corrections_20260126T230538Z/rtk_options.conf:15)\ninvalid option value out-outstat (OUTPUTS/scenario1/scenario1_with_corrections_20260126T230538Z/rtk_options.conf:16)\ninvalid option value out-timesys (OUTPUTS/scenario1/scenario1_with_corrections_20260126T230538Z/rtk_options.conf:18)\ninvalid option value out-timeform (OUTPUTS/scenario1/scenario1_with_corrections_20260126T230538Z/rtk_options.conf:19)\ninvalid option value out-degform (OUTPUTS/scenario1/scenario1_with_corrections_20260126T230538Z/rtk_options.conf:21)\ninvalid option value out-height (OUTPUTS/scenario1/scenario1_with_corrections_20260126T230538Z/rtk_options.conf:23)\n\n\n\nprocessing : 1970/01/01 00:00:00 Q=0\nprocessing : 1970/01/01 00:00:00 Q=0\n                                        \n",
+  "rtklib_stdout": "",
+  "status": "ok"
+}

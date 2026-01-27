@@ -1,0 +1,9 @@
+% program   : RTKLIB ver.2.4.2
+% inp file  : /Users/anirudhnishtala/Desktop/ai-positioning-atsc3-main/DATA/scenarios/scenario1/rover.obs
+% inp file  : /Users/anirudhnishtala/Desktop/ai-positioning-atsc3-main/DATA/scenarios/scenario1/base.obs
+% inp file  : /Users/anirudhnishtala/Desktop/ai-positioning-atsc3-main/DATA/scenarios/scenario1/nav.nav
+% obs start : 1970/01/01 00:00:00.0 GPST (week-522 -259200.0s)
+% obs end   : 1970/01/01 00:00:00.0 GPST (week-522 -259200.0s)
+%
+% (lat/lon/height=WGS84/ellipsoidal,Q=1:fix,2:float,3:sbas,4:dgps,5:single,6:ppp,ns=# of satellites)
+%  GPST                 0 latitude(deg) 0longitude(deg) 0 height(m) 0  Q 0 ns 0  sdn(m) 0  sde(m) 0  sdu(m) 0 sdne(m) 0 sdeu(m) 0 sdun(m) 0age(s) 0 ratio
