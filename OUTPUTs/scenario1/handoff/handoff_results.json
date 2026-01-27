@@ -1,0 +1,41 @@
+{
+  "scenario": "scenario1",
+  "timestamp": "2026-01-26T21:36:28.527368Z",
+  "input_file": "/Users/anirudhnishtala/Desktop/ai-positioning-atsc3-main/OUTPUTS/scenario1/corrections.rtcm",
+  "output_dir": "/Users/anirudhnishtala/Desktop/ai-positioning-atsc3-main/OUTPUTS/scenario1/handoff",
+  "success": true,
+  "stages": {
+    "read_rtcm": {
+      "status": "OK",
+      "bytes": 5025,
+      "file": "/Users/anirudhnishtala/Desktop/ai-positioning-atsc3-main/OUTPUTS/scenario1/corrections.rtcm",
+      "valid_preamble": true
+    },
+    "init_pipeline": {
+      "status": "OK",
+      "config": {
+        "fec_rate": "RATE_8_15",
+        "modulation": "QPSK",
+        "fft_size": "FFT_8K",
+        "guard_interval": "GI_1_8",
+        "alp_enabled": true
+      }
+    },
+    "process": {
+      "status": "OK",
+      "processing_time_ms": 6004.934072494507
+    }
+  },
+  "metrics": {
+    "input_bytes": 5025,
+    "output_samples": 82944,
+    "output_bytes": 663552,
+    "expansion_ratio": 132.05014925373135,
+    "signal_duration_ms": 13.5,
+    "sample_rate_hz": 6144000.0,
+    "spectral_efficiency_bps": 0.48466435185185186,
+    "fec_overhead_bytes": 5100,
+    "processing_time_ms": 6004.934072494507
+  },
+  "errors": []
+}

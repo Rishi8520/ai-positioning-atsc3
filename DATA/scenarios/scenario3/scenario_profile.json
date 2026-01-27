@@ -1,0 +1,6 @@
+{
+  "rover_obs": "rover.obs",
+  "base_obs": "base.obs",
+  "nav_file": "nav.nav",
+  "ground_truth": "gt.csv"
+}

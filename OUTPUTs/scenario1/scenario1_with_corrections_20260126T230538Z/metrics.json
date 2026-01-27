@@ -1,0 +1,23 @@
+{
+  "base_obs": "/Users/anirudhnishtala/Desktop/ai-positioning-atsc3-main/DATA/scenarios/scenario1/base.obs",
+  "corrections": "/Users/anirudhnishtala/Desktop/ai-positioning-atsc3-main/OUTPUTS/rtcms.bin",
+  "elapsed_sec": 0.093,
+  "epochs": 0,
+  "fix_pct": 0.0,
+  "float_pct": 0.0,
+  "horiz_sigma_mean": null,
+  "horiz_sigma_p50": null,
+  "horiz_sigma_p95": null,
+  "mode": "rtk",
+  "nav_file": "/Users/anirudhnishtala/Desktop/ai-positioning-atsc3-main/DATA/scenarios/scenario1/nav.nav",
+  "other_pct": 0.0,
+  "ratio_mean": null,
+  "ratio_p50": null,
+  "ratio_p95": null,
+  "rover_obs": "/Users/anirudhnishtala/Desktop/ai-positioning-atsc3-main/DATA/scenarios/scenario1/rover.obs",
+  "rtklib_binary": "/Users/anirudhnishtala/RTKLIB/app/rnx2rtkp/gcc/rnx2rtkp",
+  "run_id": "scenario1_with_corrections_20260126T230538Z",
+  "scenario": "scenario1",
+  "single_pct": 0.0,
+  "time_to_first_fix_epochs": null
+}

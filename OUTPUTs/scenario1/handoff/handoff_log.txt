@@ -1,0 +1,17 @@
+RTCM → Broadcast Handoff Test Log
+==================================================
+
+Scenario:    scenario1
+Timestamp:   2026-01-26T21:36:28.527368Z
+Input File:  /Users/anirudhnishtala/Desktop/ai-positioning-atsc3-main/OUTPUTS/scenario1/corrections.rtcm
+Output Dir:  /Users/anirudhnishtala/Desktop/ai-positioning-atsc3-main/OUTPUTS/scenario1/handoff
+
+Input Size:       4.91 KB
+Output Samples:   82,944
+Output Size:      648.00 KB
+Expansion Ratio:  132.1x
+Signal Duration:  13.50 ms
+Sample Rate:      6.14 MHz
+Processing Time:  6004.93 ms
+
+Status: SUCCESS
