@@ -1,0 +1,59 @@
+{
+  "name": "scenario1_drone_rural",
+  "description": "High-accuracy drone in rural area",
+  "intent": "provide_sub_3cm_accuracy",
+  "scenario_type": "drone_rural",
+  
+  "files": {
+    "rover_obs": "rover.obs",
+    "nav_file": "nav.nav",
+    "base_obs": "base.obs",
+    "ground_truth": "ground_truth.pos"
+  },
+  
+  "station_coordinates": {
+    "x_ecef": -2694892.46,
+    "y_ecef": -4297557.47,
+    "z_ecef": 3854813.42
+  },
+  
+  "traditional_config": {
+    "rtklib": {
+      "pos1-posmode": "kinematic",
+      "pos1-frequency": "l1",
+      "pos1-navsys": "1",
+      "pos1-elmask": "15",
+      "pos2-armode": "continuous",
+      "pos2-arthres": "3.0"
+    },
+    "broadcast": {
+      "fec_overhead_pct": 15.0,
+      "update_frequency_hz": 1.0,
+      "modulation": "QPSK",
+      "tile_resolution": "medium"
+    }
+  },
+  
+  "ai_config": {
+    "rtklib": {
+      "pos1-posmode": "kinematic",
+      "pos1-frequency": "l1+l2",
+      "pos1-navsys": "7",
+      "pos1-elmask": "10",
+      "pos2-armode": "fix-and-hold",
+      "pos2-arthres": "2.5"
+    },
+    "broadcast": {
+      "fec_overhead_pct": 40.0,
+      "update_frequency_hz": 5.0,
+      "modulation": "QPSK",
+      "tile_resolution": "high"
+    }
+  },
+  
+  "evaluation": {
+    "accuracy_target_cm": 3.0,
+    "availability_target_pct": 95.0,
+    "convergence_target_sec": 30.0
+  }
+}

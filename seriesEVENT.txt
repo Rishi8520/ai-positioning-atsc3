@@ -111,4 +111,57 @@ Created a directory inside the OUTPUTs directory named as Video where all screen
 Created three scripts for generating, validating and visulalizing the systhetic dataset in
 the CODE/ai/ directory.
 
-Then created a new file ai_broadcast_decision_maodel_v2.py and test_model_v2.py file 
+Then created a new file ai_broadcast_decision_maodel_v2.py and test_model_v2.py file
+
+27/01/2026
+Pulled origin main - Anirudh's commit
+Tweaking some scripts of CODE/gnss directory
+Created a new script named rtcm_generator_v2.py and used the "RINEX" folder for the co-ordinates
+of places. Got this:
+
+(venv) rishi@LOQ-15ARP9:~/tools/RTKLIB/test/data/rinex$ python "/media/rishi/New SSD/PROJECT_AND_RESEARCH/BUILD-A-THON_4/CODE/gnss/rtcm_generator_v2.py" \
+    --base 07590920.05o \
+    --nav 07590920.05n \
+    --out test_corrections.rtcm
+
+======================================================================
+STATION COORDINATE RESOLUTION
+======================================================================
+[INFO] Attempting to extract station coordinates from RINEX: 07590920.05o
+[OK] Extracted station coordinates from RINEX:
+     ECEF(X=-3976219.5082, Y=3382372.5671, Z=3652512.9849m, H=0.0000m) [source: RINEX:07590920.05o]
+[✓] Using coordinates from RINEX header
+[INFO] Attempting RTCM generation via RTKLIB convbin...
+[WARN] convbin produced empty output
+       Falling back to synthetic RTCM generation.
+[OK] Generated 13625 bytes (synthetic)
+     Output: /home/rishi/tools/RTKLIB/test/data/rinex/test_corrections.rtcm
+(venv) rishi@LOQ-15ARP9:~/tools/RTKLIB/test/data/rinex$ head -30 07590920.05o | grep "APPROX POSITION"
+ -3976219.5082  3382372.5671  3652512.9849                  APPROX POSITION XYZ
+
+Modified the scenarios json file in the DATA/scenario directory for all of them.
+ Created decoder.py in the CODE/broadcast directory 
+ Created broadcast_controller in the CODE/broadcast directory which accepts the following AI 
+ format:
+ {
+  "command_id": "uuid",
+  "timestamp": "ISO-8601",
+  "intent": "maximize_reliability",
+  "priority": "high",
+  "broadcast_config": {
+    "fec_ldpc_rate": "RATE_6_15",
+    "fec_rs_symbols": 24,
+    "fec_overhead_pct": 40.0,
+    "modulation": "QPSK",
+    "fft_size": "FFT_8K",
+    "guard_interval": "GI_1_4",
+    "update_frequency_hz": 5.0,
+    "tile_resolution": "high",
+    "plp_mode": "mobile"
+  },
+  "constraints": {
+    "max_latency_ms": 100,
+    "min_reliability_pct": 99.0
+  }
+}
+Created channel_simulator.py file in the CODE/broadcast directory.

@@ -1,6 +1,112 @@
 {
-  "rover_obs": "rover.obs",
-  "base_obs": "base.obs",
-  "nav_file": "nav.nav",
-  "ground_truth": "gt.csv"
+  "name": "scenario3_vehicle_urban",
+  "description": "Vehicle navigation in dense urban canyon with severe multipath and signal blockage",
+  "intent": "maximize_reliability_urban",
+  "scenario_type": "vehicle_urban",
+  
+  "files": {
+    "rover_obs": "rover.obs",
+    "nav_file": "nav.nav",
+    "base_obs": "base.obs",
+    "ground_truth": "ground_truth.pos",
+    "rtcm_file": "corrections.rtcm"
+  },
+  
+  "station_coordinates": {
+    "x_ecef": -2694200.00,
+    "y_ecef": -4298000.00,
+    "z_ecef": 3854200.00
+  },
+  
+  "environment": {
+    "sky_view": "limited",
+    "multipath": "severe",
+    "signal_quality": "degraded",
+    "baseline_km": 10.0,
+    "dynamics": "variable",
+    "urban_canyon_depth": "high",
+    "nlos_probability": 0.4
+  },
+  
+  "traditional_config": {
+    "rtklib": {
+      "pos1-posmode": "kinematic",
+      "pos1-frequency": "l1",
+      "pos1-soltype": "forward",
+      "pos1-navsys": "1",
+      "pos1-elmask": "15",
+      "pos1-snrmask_r": "on",
+      "pos1-ionoopt": "brdc",
+      "pos1-tropopt": "saas",
+      "pos1-dynamics": "on",
+      "pos2-armode": "continuous",
+      "pos2-arthres": "3.0",
+      "pos2-arlockcnt": "0",
+      "pos2-arminfix": "10",
+      "pos2-armaxiter": "1",
+      "pos2-maxage": "30",
+      "pos2-rejionno": "30",
+      "pos2-rejgdop": "30"
+    },
+    "broadcast": {
+      "fec_ldpc_rate": "RATE_8_15",
+      "fec_rs_symbols": 16,
+      "fec_overhead_pct": 15.0,
+      "modulation": "QPSK",
+      "fft_size": "FFT_8K",
+      "guard_interval": "GI_1_8",
+      "update_frequency_hz": 1.0,
+      "tile_resolution": "low",
+      "plp_mode": "fixed"
+    }
+  },
+  
+  "ai_config": {
+    "rtklib": {
+      "pos1-posmode": "kinematic",
+      "pos1-frequency": "l1+l2+l5",
+      "pos1-soltype": "forward",
+      "pos1-navsys": "63",
+      "pos1-elmask": "20",
+      "pos1-snrmask_r": "on",
+      "pos1-ionoopt": "dual-freq",
+      "pos1-tropopt": "saas",
+      "pos1-dynamics": "on",
+      "pos2-armode": "fix-and-hold",
+      "pos2-arthres": "2.0",
+      "pos2-arlockcnt": "10",
+      "pos2-arminfix": "20",
+      "pos2-armaxiter": "3",
+      "pos2-maxage": "120",
+      "pos2-rejionno": "50",
+      "pos2-rejgdop": "50",
+      "pos2-slipthres": "0.1"
+    },
+    "broadcast": {
+      "fec_ldpc_rate": "RATE_4_15",
+      "fec_rs_symbols": 32,
+      "fec_overhead_pct": 60.0,
+      "modulation": "QPSK",
+      "fft_size": "FFT_8K",
+      "guard_interval": "GI_1_4",
+      "update_frequency_hz": 10.0,
+      "tile_resolution": "high",
+      "plp_mode": "mobile"
+    }
+  },
+  
+  "evaluation": {
+    "accuracy_target_cm": 30.0,
+    "availability_target_pct": 80.0,
+    "convergence_target_sec": 60.0,
+    "target_spectral_efficiency": 0.5,
+    "target_latency_ms": 50.0,
+    "max_fec_overhead_pct": 70.0
+  },
+  
+  "notes": {
+    "challenge": "Maintain positioning availability in severe urban canyon with multipath and NLOS",
+    "ai_advantage": "All constellations (GPS+GLO+GAL+BDS+QZS), triple-frequency, aggressive FEC, fast updates, high elevation mask to reject NLOS",
+    "traditional_limitation": "Single constellation insufficient satellites, fixed FEC fails under signal degradation"
+  }
 }
