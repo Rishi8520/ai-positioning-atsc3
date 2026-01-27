@@ -122,7 +122,7 @@ The broadcast stack transforms **GNSS correction data** (primarily RTCM frames) 
 ## 2. Module Inventory
 
 | Module                   | File                      | Purpose                                          |
-|--------|-----------------|---------------------------|--------------------------------------------------|
+|--------------------------|---------------------------|--------------------------------------------------|
 | **Configuration**        |  `config.py`              | Enums, dataclasses, and configuration management |
 | **ALP Encoder**          | `alpencoder.py`           | Link layer encapsulation (A/330)                 |
 | **FEC Encoder**          | `fecencoder.py`           | LDPC + Reed-Solomon error protection             |
