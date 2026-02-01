@@ -1,20 +1,27 @@
 #!/usr/bin/env python3
 """
 ================================================================================
-MAIN ORCHESTRATOR - PPaaS AI System
+MAIN ORCHESTRATOR - PPaaS AI System (V2)
 ================================================================================
 FILE: main.py
 PURPOSE: Orchestrate complete PPaaS AI workflow
 AUTHOR: Tarunika D (AI/ML Systems)
 DATE: January 2026
-VERSION: 1.0
+VERSION: 2.0 (Updated Feb 2026 with V2 modules)
 
 Execution Flow:
-1. Data Preprocessing & Augmentation
-2. Model Training & Validation
-3. Model Inference (Broadcast Decisions)
-4. Feedback Loop (Drift Detection & Monitoring)
-5. Intent Parsing (Natural Language Processing)
+1. Data Preprocessing & Augmentation (V2: Config-driven, enhanced validation)
+2. Model Training & Validation (V2: Residual blocks, MC Dropout)
+3. Model Inference (V2: Uncertainty quantification)
+4. Feedback Loop (V2: Uncertainty tracking, enhanced drift detection)
+5. Intent Parsing (V2: Constraint validation)
+
+V2 Enhancements:
+- Configuration-driven design (config_v2.cfg)
+- Uncertainty quantification in inference & feedback
+- Enhanced data validation
+- Constraint validation in intent parsing
+- Better observability and error handling
 
 ================================================================================
 """
@@ -38,15 +45,21 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# Import configuration
-from config import Config
+# Import V2 configuration (preferred) with V1 fallback
+try:
+    from config_v2 import cfg
+    logger.info("Using V2 configuration")
+except ImportError:
+    from config import Config
+    cfg = Config()
+    logger.info("Using V1 configuration (fallback)")
 
-# Import all modules
+# Import all modules (V2-compatible versions)
 from ai_data_preprocessor import DataPreprocessingPipeline, TelemetryLoader
-from ai_broadcast_decision_model import ModelTrainer, generate_synthetic_training_data, DecisionInferenceEngine
-from ai_inference_engine import InferenceEngine, BatchInferenceProcessor
-from ai_feedback_loop import FeedbackLoop, FieldTelemetry
-from ai_intent_parser import IntentParser
+from ai_broadcast_decision_model_v2 import ModelTrainerV2, DecisionInferenceEngineV2, BroadcastDecision
+from ai_inference_engine_v2 import InferenceEngineV2
+from ai_feedback_loop import FeedbackLoop, FieldTelemetry, DriftDetectionResult
+from ai_intent_parser import IntentParser, CanonicalIntent
 
 
 # ============================================================================

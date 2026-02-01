@@ -1,4 +1,15 @@
-# System Architecture & Data Flow
+# System Architecture & Data Flow (V2)
+
+**Version:** 2.0 (Updated February 2026)  
+**Status:** Production Ready with Enhanced Features
+
+## Key V2 Enhancements
+
+- **Config-Driven Design**: All parameters configurable via `config_v2.cfg`
+- **Uncertainty Quantification**: Monte Carlo Dropout provides uncertainty estimates
+- **Enhanced Validation**: Data & constraint validation at each stage
+- **Improved Monitoring**: Better observability with statistics tracking
+- **Better Error Handling**: Graceful fallbacks and detailed error messages
 
 ## Complete Execution Flow
 
@@ -34,19 +45,22 @@ START
 │  BroadcastDecisionNet                       │ │
 │  ├─ Input Layer:    50D                     │ │
 │  ├─ Hidden 1:     128 neurons (ReLU)        │ │
+│  ├─ Residual Blocks: Skip connections      │ │ (V2: Enhanced)
 │  ├─ Hidden 2:      64 neurons (ReLU)        │ │
 │  ├─ Hidden 3:      32 neurons (ReLU)        │ │
 │  └─ Output Layer:    5D (Sigmoid)           │ │
 │    ↓                                        │ │
 │  Training Loop (200 epochs)                 │ │
-│  ├─ Optimizer: Adam                         │ │
-│  ├─ Loss: MSE                               │ │
+│  ├─ Optimizer: AdamW (V2: Improved)        │ │
+│  ├─ Loss: Multi-task weighted MSE (V2)     │ │ (V2: Enhanced)
 │  ├─ Early Stopping: patience=50 epochs      │ │
+│  ├─ Gradient Clipping (V2: Stability)      │ │ (V2: New)
 │  └─ Batch Size: 32 samples                  │ │
 │    ↓                                        │ │
-│  Output: Trained Model                      │ │
-│    - File: results/models/modelv1.pth       │ │
-│    - Loss: 0.012 (validation)               │ │
+│  Output: Trained Model (V2: With Uncertainty) │ │ (V2: Enhanced)
+│    - File: models/broadcast_decision_model_v2/│ │
+│    - Includes: Uncertainty estimates       │ │
+│    - Loss: Lower with residual blocks      │ │
 └────────────┬────────────────────────────────┘ │
              │                                  │
              ├───────────────────────────────┐  │
@@ -56,17 +70,20 @@ START
     │  STAGE 3: INFERENCE       │   │ STAGE 4: FEEDBACK│
     │  (5-10 seconds)           │   │ (10-20 seconds)  │
     │                           │   │                  │
-    │ InferenceEngine           │   │ FeedbackLoop     │
-    │ ├─ Load Model             │   │ ├─ Collect       │
-    │ ├─ Single Sample Test      │   │ │  Telemetry    │
-    │ ├─ Batch Inference        │   │ ├─ Drift        │
-    │ ├─ Fallback Policies      │   │ │  Detection    │
+    │ InferenceEngineV2         │   │ FeedbackLoop(V2) │
+    │ ├─ Load Model (V2)        │   │ ├─ Collect       │
+    │ ├─ MC Dropout Sampling    │   │ │  Telemetry    │
+    │ ├─ Uncertainty Quantif.   │   │ ├─ Uncertainty   │
+    │ ├─ ONNX Backend Support   │   │ │  Tracking (V2) │
+    │ ├─ Batch Inference        │   │ ├─ Enhanced Drift│
+    │ ├─ Fallback Policies      │   │ │  Detection (V2)│
     │ └─ Confidence Scoring     │   │ ├─ KPI Monitor   │
     │                           │   │ └─ Statistics    │
     │ Output:                   │   │                  │
-    │ - Decisions               │   │ Output:          │
+    │ - Decisions + Uncertainty │   │ Output:          │
     │ - Latency (ms)            │   │ - Drift Results  │
-    │ - Confidence (0-1)        │   │ - Aggregates     │
+    │ - Confidence (0-1)        │   │ - Uncertainties  │
+    │ - Uncertainty (V2)        │   │ - Aggregates     │
     └──────────┬────────────────┘   └────────┬─────────┘
                │                             │
                └─────────────┬───────────────┘
@@ -76,18 +93,20 @@ START
             │ STAGE 5: INTENT PARSER     │
             │ (5-15 seconds)             │
             │                            │
-            │ IntentParser               │
+            │ IntentParser (V2)          │
             │ ├─ Load Transformer        │
             │ ├─ Parse NLP Input         │
             │ ├─ Detect Intent Type      │
+            │ ├─ Validate Constraints(V2)│ (V2: New)
             │ ├─ Extract Constraints     │
-            │ └─ Generate Embeddings     │
+            │ └─ Generate Embeddings(32D)│
             │                            │
             │ Output:                    │
             │ - Intent Type              │
-            │ - Constraints              │
+            │ - Constraints (Validated)  │
             │ - Confidence               │
             │ - Embeddings (32D)         │
+            │ - Validation Status (V2)   │
             └────────────┬───────────────┘
                          │
                          ▼

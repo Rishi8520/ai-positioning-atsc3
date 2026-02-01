@@ -94,9 +94,18 @@ class InferenceEngine:
         try:
             self.decision_engine = DecisionInferenceEngine(model_path)
             logger.info(f"Loaded inference model from {model_path}")
+        except FileNotFoundError as e:
+            logger.error(
+                f"Model files not found in {model_path}\n"
+                f"Expected files: model_weights.pt, scaler_X.pkl, scaler_y.pkl\n"
+                f"Error: {e}"
+            )
+            raise FileNotFoundError(
+                f"Model directory missing required files: {model_path}"
+            ) from e
         except Exception as e:
-            logger.error(f"Failed to load model: {e}")
-            raise
+            logger.critical(f"Failed to initialize inference engine: {e}")
+            raise RuntimeError(f"Inference engine initialization failed: {e}") from e
         
         # Metrics tracking
         self.inference_history = deque(maxlen=FALLBACK_WINDOW_SIZE)

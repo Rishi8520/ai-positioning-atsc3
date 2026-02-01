@@ -5,6 +5,7 @@
 # DATE: January 2026
 # PURPOSE: Collect fleet telemetry, detect drift, trigger model retraining
 # PRODUCTION: Phase 3 - Ready for Deployment
+# V2 UPDATES: Config integration, uncertainty tracking, enhanced drift detection
 # ===============================================================================
 
 import logging
@@ -14,9 +15,18 @@ from pathlib import Path
 from collections import deque
 from dataclasses import dataclass, asdict
 from typing import Dict, List, Optional
+from enum import Enum
 
 import numpy as np
 from datetime import datetime
+
+# V2 Configuration
+try:
+    from config_v2 import cfg
+    USE_V2_CONFIG = True
+except ImportError:
+    USE_V2_CONFIG = False
+    cfg = None
 
 # ===============================================================================
 # LOGGING
@@ -29,13 +39,24 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # ===============================================================================
-# CONSTANTS
+# CONSTANTS (V2 compatible)
 # ===============================================================================
 
-TELEMETRY_BUFFER_SIZE = 10000
-DRIFT_CHECK_INTERVAL = 100  # Check drift every 100 samples
-DRIFT_THRESHOLD = 0.15  # Statistical drift threshold
-MODEL_VERSION_HISTORY_SIZE = 10
+# Get from v2 config if available
+if USE_V2_CONFIG and cfg:
+    TELEMETRY_BUFFER_SIZE = cfg.feedback.buffer_size
+    DRIFT_CHECK_INTERVAL = max(100, cfg.feedback.drift_window_size // 10)
+    DRIFT_THRESHOLD = cfg.feedback.drift_zscore_threshold / 10.0  # Convert z-score to normalized
+    MODEL_VERSION_HISTORY_SIZE = 10
+    DRIFT_METHOD = cfg.feedback.drift_method
+    KPI_DEGRADATION_THRESHOLD = cfg.feedback.kpi_degradation_threshold
+else:
+    TELEMETRY_BUFFER_SIZE = 10000
+    DRIFT_CHECK_INTERVAL = 100
+    DRIFT_THRESHOLD = 0.15
+    MODEL_VERSION_HISTORY_SIZE = 10
+    DRIFT_METHOD = "zscore"
+    KPI_DEGRADATION_THRESHOLD = 0.1
 
 # ===============================================================================
 # DATA CLASSES
@@ -43,7 +64,7 @@ MODEL_VERSION_HISTORY_SIZE = 10
 
 @dataclass
 class FieldTelemetry:
-    """Actual positioning performance from field"""
+    """Actual positioning performance from field (V2 enhanced)"""
     timestamp: float
     vehicle_id: str
     rtk_mode: str  # "STAND-ALONE", "FLOAT", "FIX"
@@ -54,16 +75,20 @@ class FieldTelemetry:
     num_satellites: int
     signal_strength_avg_db: float
     multipath_indicator: float
+    model_uncertainty: Optional[float] = None  # NEW: Uncertainty from inference engine
+    inference_confidence: Optional[float] = None  # NEW: Confidence from model
 
 
 @dataclass
 class DriftDetectionResult:
-    """Result of drift detection"""
+    """Result of drift detection (V2 enhanced)"""
     drift_detected: bool
     drift_magnitude: float  # Absolute drift amount
     metric_affected: str  # Which metric drifted
     recommendation: str  # "retrain" or "monitor"
     timestamp: float
+    uncertainty: Optional[float] = None  # NEW: Uncertainty from MC Dropout
+    drift_method: Optional[str] = None  # NEW: Which method detected drift
 
 
 @dataclass
@@ -87,20 +112,81 @@ class TelemetryAggregator:
     def __init__(self, buffer_size: int = TELEMETRY_BUFFER_SIZE):
         self.buffer = deque(maxlen=buffer_size)
         self.aggregation_windows = {}
+        self.validation_stats = {
+            'received': 0,
+            'valid': 0,
+            'invalid': 0
+        }
         logger.info(f"TelemetryAggregator initialized with buffer size {buffer_size}")
     
-    def add_telemetry(self, telemetry: FieldTelemetry) -> int:
+    def add_telemetry(self, telemetry: FieldTelemetry) -> Optional[int]:
         """
-        Add field telemetry to buffer
+        Add field telemetry to buffer with validation
         
         Args:
             telemetry: FieldTelemetry object
         
         Returns:
-            Current buffer size
+            Current buffer size if valid, None if rejected
         """
+        self.validation_stats['received'] += 1
+        
+        if not self._validate_telemetry(telemetry):
+            self.validation_stats['invalid'] += 1
+            logger.warning(
+                f"Rejected telemetry from {telemetry.vehicle_id}: "
+                f"HPE={telemetry.actual_hpe_cm}cm, "
+                f"Availability={telemetry.actual_availability_pct}%"
+            )
+            return None
+        
         self.buffer.append(telemetry)
+        self.validation_stats['valid'] += 1
         return len(self.buffer)
+    
+    def _validate_telemetry(self, telemetry: FieldTelemetry) -> bool:
+        """
+        Validate telemetry values are within reasonable ranges
+        
+        Args:
+            telemetry: FieldTelemetry object
+        
+        Returns:
+            True if valid, False otherwise
+        """
+        # Check HPE (horizontal positioning error)
+        if telemetry.actual_hpe_cm < 0 or telemetry.actual_hpe_cm > 100:
+            return False
+        
+        # Check VPE (vertical positioning error)
+        if telemetry.actual_vpe_cm < 0 or telemetry.actual_vpe_cm > 100:
+            return False
+        
+        # Check availability percentage
+        if telemetry.actual_availability_pct < 0 or telemetry.actual_availability_pct > 100:
+            return False
+        
+        # Check convergence time
+        if telemetry.convergence_time_sec < 0 or telemetry.convergence_time_sec > 300:
+            return False
+        
+        # Check satellite count
+        if telemetry.num_satellites < 0 or telemetry.num_satellites > 40:
+            return False
+        
+        # Check signal strength (dB)
+        if telemetry.signal_strength_avg_db < -200 or telemetry.signal_strength_avg_db > 0:
+            return False
+        
+        return True
+    
+    def get_validation_stats(self) -> Dict[str, int]:
+        """Get telemetry validation statistics
+        
+        Returns:
+            Dictionary with 'received', 'valid', 'invalid' counts
+        """
+        return self.validation_stats.copy()
     
     def get_window_statistics(self, window_size: int = 100) -> Dict:
         """
@@ -175,13 +261,14 @@ class TelemetryAggregator:
 # ===============================================================================
 
 class DriftDetector:
-    """Detect data/concept drift in positioning performance"""
+    """Detect data/concept drift in positioning performance (V2 enhanced)"""
     
     def __init__(self, baseline_window_size: int = 100, detection_threshold: float = DRIFT_THRESHOLD):
         self.baseline_window_size = baseline_window_size
         self.detection_threshold = detection_threshold
         self.baseline_stats = {}
-        logger.info("DriftDetector initialized")
+        self.drift_method = DRIFT_METHOD  # V2: configurable drift detection method
+        logger.info(f"DriftDetector initialized with method={self.drift_method}")
     
     def set_baseline(self, telemetry_buffer: List[FieldTelemetry]) -> Dict:
         """
@@ -203,27 +290,35 @@ class DriftDetector:
         availability_values = np.array([t.actual_availability_pct for t in recent])
         convergence_values = np.array([t.convergence_time_sec for t in recent])
         
+        # NEW: Include uncertainty statistics
+        model_uncertainties = [t.model_uncertainty for t in recent if t.model_uncertainty is not None]
+        
         self.baseline_stats = {
             "hpe_mean": float(np.mean(hpe_values)),
             "hpe_std": float(np.std(hpe_values)),
             "availability_mean": float(np.mean(availability_values)),
             "availability_std": float(np.std(availability_values)),
             "convergence_mean": float(np.mean(convergence_values)),
-            "convergence_std": float(np.std(convergence_values))
+            "convergence_std": float(np.std(convergence_values)),
+            "model_uncertainty_mean": float(np.mean(model_uncertainties)) if model_uncertainties else 0.0,
+            "window_size": len(recent)
         }
         
         logger.info(f"Baseline statistics set from {len(recent)} samples")
+        logger.info(f"  HPE: {self.baseline_stats['hpe_mean']:.2f} ± {self.baseline_stats['hpe_std']:.2f} cm")
+        logger.info(f"  Availability: {self.baseline_stats['availability_mean']:.1f} ± {self.baseline_stats['availability_std']:.1f} %")
+        
         return self.baseline_stats
     
     def detect_drift(self, recent_samples: List[FieldTelemetry]) -> DriftDetectionResult:
         """
-        Detect drift in recent samples
+        Detect drift in recent samples (V2 enhanced with uncertainty)
         
         Args:
             recent_samples: Recent telemetry samples to check
         
         Returns:
-            DriftDetectionResult
+            DriftDetectionResult with uncertainty and method info
         """
         if not self.baseline_stats or len(recent_samples) < 10:
             return DriftDetectionResult(
@@ -231,17 +326,27 @@ class DriftDetector:
                 drift_magnitude=0.0,
                 metric_affected="none",
                 recommendation="monitor",
-                timestamp=time.time()
+                timestamp=time.time(),
+                uncertainty=0.0,
+                drift_method=self.drift_method
             )
         
         # Check each metric
         drift_detected = False
         max_drift = 0.0
         affected_metric = "none"
+        avg_uncertainty = 0.0
+        
+        # NEW: Average model uncertainty from recent samples
+        uncertainties = [s.model_uncertainty for s in recent_samples if s.model_uncertainty is not None]
+        if uncertainties:
+            avg_uncertainty = float(np.mean(uncertainties))
         
         # HPE drift check
         recent_hpe = np.array([t.actual_hpe_cm for t in recent_samples])
-        hpe_drift = abs(np.mean(recent_hpe) - self.baseline_stats["hpe_mean"]) / (self.baseline_stats["hpe_std"] + 1e-6)
+        hpe_mean = np.mean(recent_hpe)
+        hpe_std_baseline = self.baseline_stats["hpe_std"] + 1e-6
+        hpe_drift = abs(hpe_mean - self.baseline_stats["hpe_mean"]) / hpe_std_baseline
         
         if hpe_drift > self.detection_threshold:
             drift_detected = True
@@ -251,7 +356,9 @@ class DriftDetector:
         
         # Availability drift check
         recent_avail = np.array([t.actual_availability_pct for t in recent_samples])
-        avail_drift = abs(np.mean(recent_avail) - self.baseline_stats["availability_mean"]) / (self.baseline_stats["availability_std"] + 1e-6)
+        avail_mean = np.mean(recent_avail)
+        avail_std_baseline = self.baseline_stats["availability_std"] + 1e-6
+        avail_drift = abs(avail_mean - self.baseline_stats["availability_mean"]) / avail_std_baseline
         
         if avail_drift > self.detection_threshold:
             drift_detected = True
@@ -261,7 +368,9 @@ class DriftDetector:
         
         # Convergence drift check
         recent_conv = np.array([t.convergence_time_sec for t in recent_samples])
-        conv_drift = abs(np.mean(recent_conv) - self.baseline_stats["convergence_mean"]) / (self.baseline_stats["convergence_std"] + 1e-6)
+        conv_mean = np.mean(recent_conv)
+        conv_std_baseline = self.baseline_stats["convergence_std"] + 1e-6
+        conv_drift = abs(conv_mean - self.baseline_stats["convergence_mean"]) / conv_std_baseline
         
         if conv_drift > self.detection_threshold:
             drift_detected = True
@@ -269,18 +378,26 @@ class DriftDetector:
                 max_drift = conv_drift
                 affected_metric = "convergence"
         
+        # NEW: Consider uncertainty in recommendation
         recommendation = "retrain" if drift_detected else "monitor"
+        if drift_detected and avg_uncertainty > 0.3:
+            recommendation = "retrain"  # High uncertainty + drift = definite retrain
         
         result = DriftDetectionResult(
             drift_detected=drift_detected,
             drift_magnitude=max_drift,
             metric_affected=affected_metric,
             recommendation=recommendation,
-            timestamp=time.time()
+            timestamp=time.time(),
+            uncertainty=avg_uncertainty,
+            drift_method=self.drift_method
         )
         
         if drift_detected:
-            logger.warning(f"Drift detected in {affected_metric}: magnitude={max_drift:.3f}")
+            logger.warning(
+                f"Drift detected in {affected_metric}: magnitude={max_drift:.3f}, "
+                f"uncertainty={avg_uncertainty:.4f}, recommendation={recommendation}"
+            )
         
         return result
 

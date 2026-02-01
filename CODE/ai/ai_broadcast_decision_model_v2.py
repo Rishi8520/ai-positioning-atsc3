@@ -41,14 +41,18 @@ VALIDATION_SPLIT = 0.15
 EARLY_STOPPING_PATIENCE = 50
 DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
 
-# Output normalization ranges
-OUTPUT_RANGES = {
-    0: (1.0, 5.0),      # redundancy_ratio
-    1: (0.1, 2.0),      # spectrum_mbps
-    2: (0.80, 0.99),    # availability_pct
-    3: (10.0, 60.0),    # convergence_time_sec
-    4: (1.0, 50.0)      # accuracy_hpe_cm
-}
+# Get output ranges from config if available (single source of truth)
+try:
+    from config_v2 import cfg
+    OUTPUT_RANGES = cfg.model.output_ranges
+except ImportError:
+    OUTPUT_RANGES = {
+        0: (1.0, 5.0),      # redundancy_ratio
+        1: (0.1, 2.0),      # spectrum_mbps
+        2: (0.80, 0.99),    # availability_pct
+        3: (10.0, 60.0),    # convergence_time_sec
+        4: (1.0, 50.0)      # accuracy_hpe_cm
+    }
 
 # Multi-task loss weights
 LOSS_WEIGHTS = {

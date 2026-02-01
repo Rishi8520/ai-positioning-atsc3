@@ -5,15 +5,24 @@
 # DATE: January 2026
 # PURPOSE: Data loading, normalization, augmentation for model training
 # PRODUCTION: Phase 3 - Ready for Deployment
+# V2 UPDATES: Config integration, enhanced validation, consistency with v2 architecture
 # ===============================================================================
 
 import logging
 from pathlib import Path
-from typing import Tuple, Optional
+from typing import Tuple, Optional, Dict, Any
 
 import numpy as np
 from sklearn.preprocessing import StandardScaler, MinMaxScaler, RobustScaler
 from sklearn.model_selection import train_test_split
+
+# V2 Configuration
+try:
+    from config_v2 import cfg
+    USE_V2_CONFIG = True
+except ImportError:
+    USE_V2_CONFIG = False
+    cfg = None
 
 # ===============================================================================
 # LOGGING
@@ -26,11 +35,22 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # ===============================================================================
-# CONSTANTS
+# CONSTANTS (compatible with config_v2)
 # ===============================================================================
 
-INPUT_FEATURE_DIM = 50
-OUTPUT_FEATURE_DIM = 5
+# Get from v2 config if available
+if USE_V2_CONFIG and cfg:
+    INPUT_FEATURE_DIM = cfg.data.input_dim
+    OUTPUT_FEATURE_DIM = cfg.data.output_dim
+    OUTLIER_THRESHOLD = cfg.data.outlier_threshold
+    NORMALIZE_METHOD = cfg.data.input_scaler
+    OUTPUT_SCALER = cfg.data.output_scaler
+else:
+    INPUT_FEATURE_DIM = 50
+    OUTPUT_FEATURE_DIM = 5
+    OUTLIER_THRESHOLD = 5.0
+    NORMALIZE_METHOD = "standard"
+    OUTPUT_SCALER = "minmax"
 FEATURE_NAMES = [
     # Subchannel state (20D)
     "signal_strength_0", "signal_strength_1", "signal_strength_2", "signal_strength_3",
@@ -85,9 +105,15 @@ class TelemetryLoader:
             data = np.loadtxt(csv_path, delimiter=',', skiprows=1, max_rows=n_rows)
             logger.info(f"Loaded {len(data)} samples with shape {data.shape}")
             return data
+        except FileNotFoundError as e:
+            logger.error(f"Dataset file not found: {csv_path}")
+            raise FileNotFoundError(f"Missing dataset: {csv_path}") from e
+        except ValueError as e:
+            logger.error(f"Invalid data in CSV: {e}")
+            raise ValueError(f"CSV format error: {e}") from e
         except Exception as e:
-            logger.error(f"Failed to load CSV: {e}")
-            raise
+            logger.critical(f"Unexpected error loading CSV: {e}")
+            raise RuntimeError(f"Failed to load CSV: {e}") from e
     
     @staticmethod
     def load_from_numpy(npy_path: str) -> np.ndarray:
@@ -134,7 +160,7 @@ class TelemetryLoader:
 # ===============================================================================
 
 class FeatureNormalizer:
-    """Normalize features for neural network training"""
+    """Normalize features for neural network training (V2 compatible)"""
     
     def __init__(self, method: str = "standard"):
         """
@@ -142,6 +168,8 @@ class FeatureNormalizer:
         
         Args:
             method: "standard" (z-score), "minmax" (0-1), or "robust" (IQR-based)
+                    - Input features use 'standard' for v2 compatibility
+                    - Output targets use 'minmax' for sigmoid output compatibility
         """
         self.method = method
         
@@ -155,6 +183,7 @@ class FeatureNormalizer:
             raise ValueError(f"Unknown normalization method: {method}")
         
         self.is_fitted = False
+        self.feature_stats = None  # NEW: Track statistics for validation
         logger.info(f"FeatureNormalizer initialized with method: {method}")
     
     def fit(self, X: np.ndarray) -> 'FeatureNormalizer':
@@ -167,9 +196,22 @@ class FeatureNormalizer:
         Returns:
             self
         """
+        # V2 ENHANCEMENT: Validate data before fitting
+        self._validate_data(X, "input")
+        
         self.scaler.fit(X)
         self.is_fitted = True
-        logger.info(f"Normalizer fitted on {len(X)} samples")
+        
+        # NEW: Track statistics for later reference
+        self.feature_stats = {
+            "mean": X.mean(axis=0),
+            "std": X.std(axis=0),
+            "min": X.min(axis=0),
+            "max": X.max(axis=0),
+            "shape": X.shape
+        }
+        
+        logger.info(f"Normalizer fitted on {len(X)} samples (shape {X.shape})")
         return self
     
     def transform(self, X: np.ndarray) -> np.ndarray:
@@ -187,6 +229,33 @@ class FeatureNormalizer:
     def fit_transform(self, X: np.ndarray) -> np.ndarray:
         """Fit and transform in one step"""
         return self.fit(X).transform(X)
+    
+    def _validate_data(self, X: np.ndarray, data_type: str = "input") -> None:
+        """
+        NEW: Validate data integrity according to v2 standards
+        
+        Args:
+            X: Data array to validate
+            data_type: "input" or "output" for context-specific checks
+        
+        Raises:
+            ValueError if validation fails
+        """
+        if X is None or len(X) == 0:
+            raise ValueError(f"{data_type} array is empty")
+        
+        # Check NaN/Inf
+        if np.any(np.isnan(X)) or np.any(np.isinf(X)):
+            nan_count = np.sum(np.isnan(X))
+            inf_count = np.sum(np.isinf(X))
+            raise ValueError(f"Found {nan_count} NaNs and {inf_count} Infs in {data_type}")
+        
+        # Check dimensions
+        expected_dim = OUTPUT_FEATURE_DIM if data_type == "output" else INPUT_FEATURE_DIM
+        if X.shape[1] != expected_dim:
+            raise ValueError(f"Expected {expected_dim} features, got {X.shape[1]}")
+        
+        logger.debug(f"Data validation passed for {data_type}: shape={X.shape}")
 
 
 # ===============================================================================
@@ -352,19 +421,28 @@ class DataSplitter:
 # ===============================================================================
 
 class DataPreprocessingPipeline:
-    """Complete data preprocessing pipeline"""
+    """Complete data preprocessing pipeline (V2 compatible)"""
     
     def __init__(self, normalization_method: str = "standard"):
+        # Use v2 config if available
+        if USE_V2_CONFIG and cfg:
+            normalization_method = cfg.data.input_scaler
+        
         self.normalizer_X = FeatureNormalizer(method=normalization_method)
-        self.normalizer_y = FeatureNormalizer(method="minmax")
+        self.normalizer_y = FeatureNormalizer(method=OUTPUT_SCALER)  # Always minmax for sigmoid
         self.augmenter = DataAugmenter()
+        
+        # NEW: Track pipeline statistics
+        self.pipeline_stats = {}
+        
         logger.info("DataPreprocessingPipeline initialized")
+        logger.info(f"Input scaler: {normalization_method}, Output scaler: {OUTPUT_SCALER}")
     
     def process(self, X: np.ndarray, y: np.ndarray,
                 augment: bool = True,
                 augmentation_factor: int = 2) -> dict:
         """
-        Complete preprocessing pipeline
+        Complete preprocessing pipeline (V2 compatible)
         
         Args:
             X, y: Raw input and output arrays
@@ -376,21 +454,36 @@ class DataPreprocessingPipeline:
         """
         logger.info("Starting data preprocessing pipeline")
         
-        # Validate dimensions
-        assert X.shape[1] == INPUT_FEATURE_DIM, f"Expected {INPUT_FEATURE_DIM} input features"
-        assert y.shape[1] == OUTPUT_FEATURE_DIM, f"Expected {OUTPUT_FEATURE_DIM} output features"
+        # V2 ENHANCEMENT: Enhanced validation
+        try:
+            self.normalizer_X._validate_data(X, "input")
+            self.normalizer_y._validate_data(y, "output")
+        except ValueError as e:
+            logger.error(f"Data validation failed: {e}")
+            raise
         
-        # Remove outliers (3-sigma rule)
-        valid_mask = (np.abs(X) < 3).all(axis=1) & (np.abs(y) < 3).all(axis=1)
+        # Remove outliers (configurable threshold from v2)
+        threshold = OUTLIER_THRESHOLD if USE_V2_CONFIG else 3.0
+        initial_count = len(X)
+        
+        valid_mask = (np.abs(X) < threshold).all(axis=1) & (np.abs(y) < threshold).all(axis=1)
         X = X[valid_mask]
         y = y[valid_mask]
-        logger.info(f"Removed {sum(~valid_mask)} outliers")
+        outlier_count = initial_count - len(X)
+        
+        logger.info(f"Removed {outlier_count} outliers using {threshold}-sigma rule")
+        
+        # NEW: Track stats
+        self.pipeline_stats["initial_samples"] = initial_count
+        self.pipeline_stats["outliers_removed"] = outlier_count
         
         # Augment if requested
         if augment:
+            X_orig_len = len(X)
             X = self.augmenter.augment_batch(X, augmentation_factor=augmentation_factor)
             y = np.repeat(y, augmentation_factor, axis=0)
-            logger.info(f"Augmented to {len(X)} samples")
+            logger.info(f"Augmented: {X_orig_len} → {len(X)} samples")
+            self.pipeline_stats["augmented_samples"] = len(X)
         
         # Normalize inputs and outputs
         X_normalized = self.normalizer_X.fit_transform(X)
@@ -399,7 +492,12 @@ class DataPreprocessingPipeline:
         # Split into train/val/test
         splits = DataSplitter.split(X_normalized, y_normalized)
         
+        self.pipeline_stats["final_train_size"] = len(splits['X_train'])
+        self.pipeline_stats["final_val_size"] = len(splits['X_val'])
+        self.pipeline_stats["final_test_size"] = len(splits['X_test'])
+        
         logger.info("Data preprocessing complete")
+        logger.info(f"Final split: train={len(splits['X_train'])}, val={len(splits['X_val'])}, test={len(splits['X_test'])}")
         
         return splits
 

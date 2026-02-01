@@ -1,7 +1,17 @@
-# Training Data Input Format Guide
+# Training Data Input Format Guide (V2)
+
+**Version:** 2.0 (Updated February 2026)
 
 ## Overview
 The AI model expects **50-dimensional feature vectors** representing GNSS telemetry and channel state information. For 10k samples, you need to prepare data in one of the following formats.
+
+**V2 Data Preprocessor Features:**
+- ✓ Automatic dimension validation (checks for 50D inputs)
+- ✓ NaN/Inf detection and removal
+- ✓ Outlier detection using configurable threshold (default: 5σ)
+- ✓ Configurable normalization methods
+- ✓ Data augmentation with realistic variations
+- ✓ Automatic train/val/test splitting
 
 ---
 

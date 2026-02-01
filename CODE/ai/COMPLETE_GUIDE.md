@@ -1,4 +1,7 @@
-# PPaaS AI System - Complete Execution & Reference Guide
+# PPaaS AI System - Complete Execution & Reference Guide (V2)
+
+**Version:** 2.0 (Updated February 2026)  
+**Status:** Production Ready with V2 Enhancements
 
 
 
@@ -24,35 +27,35 @@ python main.py
 
 ---
 
-## 📊 5-Stage System Overview
+## 📊 5-Stage System Overview (V2)
 
-Your system executes 5 stages automatically:
+Your system executes 5 stages automatically with V2 enhancements:
 
-| Stage | Module | Time | Purpose |
-|-------|--------|------|---------|
-| **1** | Data Preprocessing | 2-5s | Load, normalize, augment, split data |
-| **2** | Model Training | 60-120s | Train neural network, save model |
-| **3** | Inference Engine | 5-10s | Test real-time inference |
-| **4** | Feedback Loop | 10-20s | Detect drift, monitor KPIs |
-| **5** | Intent Parser | 5-15s | NLP intent parsing |
-| | **TOTAL** | **80-170s** | **2-3 minutes** |
+| Stage | Module | Time | Purpose | V2 Features |
+|-------|--------|------|---------|------------|
+| **1** | Data Preprocessing | 2-5s | Load, normalize, augment, split | ✓ Config-driven, validation |
+| **2** | Model Training | 60-120s | Train with residual blocks | ✓ Residual connections, MC Dropout |
+| **3** | Inference Engine | 5-10s | Real-time with uncertainty | ✓ Uncertainty quantification, ONNX |
+| **4** | Feedback Loop | 10-20s | Detect drift with uncertainty | ✓ Uncertainty-aware decisions |
+| **5** | Intent Parser | 5-15s | NLP with constraint validation | ✓ Constraint validation |
+| | **TOTAL** | **80-170s** | **2-3 minutes** | ✓ **All V2 Compatible** |
 
 ---
 
 ## 📋 FILES CREATED
 
-### Execution Framework (NEW)
-- **main.py** - Orchestrator (300+ lines, runs all stages)
+### Execution Framework
+- **main.py** - Orchestrator (V2 compatible, ~436 lines)
 - **run.ps1** - PowerShell launcher ⭐ USE THIS
 - **run.bat** - Batch launcher
-- **config.py** - Configuration (CORRECTED)
+- **config_v2.py** - V2 Configuration ⭐ RECOMMENDED
 
-### Core Modules (Validated)
-- **ai_data_preprocessor.py** - Stage 1
-- **ai_broadcast_decision_model.py** - Stage 2
-- **ai_inference_engine.py** - Stage 3
-- **ai_feedback_loop.py** - Stage 4
-- **ai_intent_parser.py** - Stage 5
+### Core Modules (V2 Compatible)
+- **ai_data_preprocessor.py** - Stage 1 (✓ V2 updated)
+- **ai_broadcast_decision_model_v2.py** - Stage 2 (✓ V2 native)
+- **ai_inference_engine_v2.py** - Stage 3 (✓ V2 native)
+- **ai_feedback_loop.py** - Stage 4 (✓ V2 updated)
+- **ai_intent_parser.py** - Stage 5 (✓ V2 updated)
 
 ---
 
@@ -60,25 +63,29 @@ Your system executes 5 stages automatically:
 
 ### STAGE 1: Data Preprocessing & Augmentation (2-5 seconds)
 
-**File:** `ai_data_preprocessor.py`
+**File:** `ai_data_preprocessor.py` (✓ V2 Updated)
 
-**What It Does:**
+**What It Does (V2 Enhanced):**
 - Loads/generates 10,000 telemetry samples (50D features)
-- Normalizes features using standard/minmax/robust scaling
+- **Validates data integrity** (NaN/Inf checking) ← V2 NEW
+- Normalizes features using config method (standard/minmax/robust)
 - Augments data (Gaussian noise, sensor drift, mixup, smoothing)
-- Removes outliers (3-sigma rule)
+- Removes outliers (configurable threshold, default 5σ) ← V2 Enhanced
 - Splits into train/val/test (70/15/15)
+- **Tracks pipeline statistics** ← V2 NEW
 
 **Key Output:**
 - `X_train`, `X_val`, `X_test` - Normalized feature arrays (50D)
-- `y_train`, `y_val`, `y_test` - Normalized output targets (5D)
+- `y_train`, `y_val`, `y_test` - Normalized output targets (5D with minmax)
+- Pipeline statistics with sample counts
 
-**Configuration Options** (in `config.py`):
+**Configuration Options** (in `config_v2.py`):
 ```python
-cfg.data.normalize_method = "standard"  # "minmax" or "robust"
-cfg.data.train_ratio = 0.7
-cfg.data.val_ratio = 0.15
-cfg.data.test_ratio = 0.1
+cfg.data.input_scaler = "standard"        # "minmax" or "robust"
+cfg.data.output_scaler = "minmax"         # Always minmax for sigmoid
+cfg.data.outlier_threshold = 5.0          # Configurable threshold
+cfg.data.normalize_inputs = True
+cfg.data.normalize_outputs = True
 ```
 
 **Run Individually:**
@@ -90,29 +97,32 @@ python ai_data_preprocessor.py
 
 ### STAGE 2: Neural Network Training (60-120 seconds)
 
-**File:** `ai_broadcast_decision_model.py`
+**File:** `ai_broadcast_decision_model_v2.py` (✓ V2 Native)
 
-**What It Does:**
-- Initializes BroadcastDecisionNet neural network
-- Trains with Adam optimizer and MSE loss
-- Implements early stopping (monitors validation loss)
-- Saves trained model to `results/models/modelv1.pth`
-- Evaluates on test set
+**What It Does (V2 Enhanced):**
+- Initializes BroadcastDecisionNetV2 with residual connections
+- Trains with **AdamW** optimizer and **cosine annealing** scheduler (V2) ← Enhanced
+- Implements **multi-task weighted loss** (V2) ← NEW
+- Uses **Monte Carlo Dropout** for uncertainty quantification (V2) ← NEW
+- Implements **gradient clipping** for stability (V2) ← NEW
+- Monitors validation loss with early stopping
+- Saves trained model + uncertainty estimates
 
-**Network Architecture:**
+**Network Architecture (V2):**
 ```
 Input (50D)
   ↓
-Dense Layer: 50 → 128 neurons + ReLU
+Dense Layer: 50 → 128 neurons + BatchNorm + ReLU
   ↓
-Dense Layer: 128 → 64 neurons + ReLU
+Residual Blocks: 128 → 128 (V2) ← Enhanced architecture
   ↓
-Dense Layer: 64 → 32 neurons + ReLU
+Dense Layer: 128 → 64 neurons + BatchNorm + ReLU
   ↓
-Output Layer: 32 → 5 neurons + Sigmoid
+Dense Layer: 64 → 32 neurons + BatchNorm + ReLU
   ↓
-Output (5D): [redundancy_ratio, spectrum_mbps, availability_pct, 
-              convergence_time_sec, accuracy_hpe_cm]
+Multi-head Output: 5 separate output heads (V2) ← NEW
+  ↓
+Output (5D + Sigmoid): [redundancy, spectrum, availability, convergence, accuracy]
 ```
 
 **Output Features (5D):**
@@ -123,74 +133,110 @@ Output (5D): [redundancy_ratio, spectrum_mbps, availability_pct,
 - Accuracy HPE (cm): 1-50cm
 
 **Key Output:**
-- Trained model: `results/models/modelv1.pth`
-- Training loss history
-- Validation metrics
+- Trained model: `models/broadcast_decision_model_v2/`
+- Model weights: `model_weights.pt`
+- Scalers: `scaler_X.pkl`, `scaler_y.pkl`
+- Training history with uncertainty
 
-**Configuration Options** (in `config.py`):
+**Configuration Options** (in `config_v2.py`):
 ```python
-cfg.training.num_epochs = 200           # Reduce for faster testing
-cfg.training.batch_size = 32            # Reduce if out of memory
+cfg.training.num_epochs = 200
+cfg.training.batch_size = 32
 cfg.training.learning_rate = 0.001
+cfg.training.optimizer = "adamw"                    # V2: AdamW
+cfg.training.scheduler = "cosine"                   # V2: Cosine annealing
+cfg.training.gradient_clip_max_norm = 1.0           # V2: NEW
 cfg.training.early_stopping_patience = 50
-cfg.training.device = "cpu"             # or "cuda" for GPU
+cfg.training.device = "cpu"                         # or "cuda"
+cfg.model.use_residual = True                       # V2: Residual blocks
+cfg.inference.mc_samples = 20                       # V2: MC Dropout samples
 ```
 
 **Run Individually:**
 ```bash
-python ai_broadcast_decision_model.py
+python ai_broadcast_decision_model_v2.py
 ```
 
 ---
 
 ### STAGE 3: Real-Time Inference Engine (5-10 seconds)
 
-**File:** `ai_inference_engine.py`
+**File:** `ai_inference_engine_v2.py` (✓ V2 Native)
 
-**What It Does:**
+**What It Does (V2 Enhanced):**
 - Loads trained model from Stage 2
-- Performs single-sample real-time inference
-- Implements fallback policies (conservative/balanced/aggressive)
+- Performs **Monte Carlo Dropout inference** for uncertainty (V2) ← NEW
+- **ONNX backend support** for 3-5x faster inference (V2) ← NEW
+- Implements **uncertainty-aware fallback policies** (V2) ← Enhanced
 - Batch inference for multiple vehicles
-- Tracks latency and confidence metrics
+- **Advanced health monitoring** (V2) ← NEW
+- Tracks latency, confidence, AND uncertainty metrics (V2) ← NEW
 
 **Key Classes:**
-- `InferenceEngine` - Core inference engine
-- `BatchInferenceProcessor` - Queue-based batch processing
+- `InferenceEngineV2` - Core inference engine with uncertainty
+- `InferenceResult` - Complete result with metrics
 
 **Key Output:**
-- Broadcast decisions with confidence scores
+- Broadcast decisions with confidence AND uncertainty (V2)
 - Inference latency metrics (avg, p95, p99)
+- Uncertainty estimates from MC Dropout
 - Aggregated fleet decisions
 
-**Configuration Options** (in `config.py`):
+**Configuration Options** (in `config_v2.py`):
 ```python
-cfg.inference.model_path = "results/models/modelv1.pth"
-cfg.inference.confidence_threshold = 0.6
-cfg.inference.target_latency_ms = 50    # p95 target
-cfg.inference.fallback_policy = "conservative_defaults"
+cfg.inference.model_dir = "models/broadcast_decision_model_v2"
+cfg.inference.mc_samples = 20                       # V2: MC Dropout samples
+cfg.inference.confidence_threshold = 0.7
+cfg.inference.use_onnx = False                      # V2: ONNX backend
+cfg.inference.device = "cpu"
+cfg.inference.enable_fallback = True
+cfg.inference.fallback_policy = "conservative"      # V2: Uncertainty-aware
+cfg.inference.target_latency_ms = 50.0
 ```
 
-**Example Usage:**
+**Example Usage (V2):**
 ```python
-from ai_inference_engine import InferenceEngine
+from ai_inference_engine_v2 import InferenceEngineV2
 import numpy as np
 
-# Initialize engine
-engine = InferenceEngine("results/models/modelv1.pth")
+# Initialize engine (with V2 features)
+engine = InferenceEngineV2(
+    mc_samples=20  # V2: Monte Carlo Dropout
+)
 
-# Single inference
-telemetry = np.random.randn(50)  # 50D feature vector
+# Single inference with uncertainty
+telemetry = np.random.randn(50)
 result = engine.infer(telemetry)
 
-# Access results
-print(result.broadcast_decision.to_dict())
-# Output: {
-#   'redundancy_ratio': 2.5,
-#   'spectrum_mbps': 1.8,
-#   'availability_pct': 0.92,
-#   'convergence_time_sec': 35.0,
-#   'accuracy_hpe_cm': 5.0,
+# Access V2 results with uncertainty
+decision = result.broadcast_decision
+print(f"Decision: {decision.to_dict()}")
+print(f"Uncertainty: {decision.uncertainty:.4f}")  # V2 NEW
+print(f"Confidence: {decision.confidence:.4f}")
+print(f"Metrics: {result.metrics}")
+```
+
+**V2 Output:**
+```json
+{
+  "broadcast_decision": {
+    "redundancy_ratio": 2.5,
+    "spectrum_mbps": 1.8,
+    "availability_pct": 0.92,
+    "convergence_time_sec": 35.0,
+    "accuracy_hpe_cm": 5.0,
+    "confidence": 0.88,
+    "uncertainty": 0.12
+  },
+  "metrics": {
+    "inference_time_ms": 12.5,
+    "confidence": 0.88,
+    "uncertainty": 0.12,
+    "policy_applied": "model",
+    "backend": "pytorch"
+  },
+  "timestamp": 1707177600.0
+}
 #   'confidence': 0.75
 # }
 
@@ -209,34 +255,40 @@ python ai_inference_engine.py
 
 ### STAGE 4: Feedback Loop & Drift Detection (10-20 seconds)
 
-**File:** `ai_feedback_loop.py`
+**File:** `ai_feedback_loop.py` (✓ V2 Updated)
 
-**What It Does:**
+**What It Does (V2 Enhanced):**
 - Collects real-time field telemetry from vehicles
-- Buffers telemetry (up to 10,000 samples)
-- Detects statistical drift in positioning performance
+- **Tracks model uncertainty** from inference engine (V2) ← NEW
+- Buffers telemetry (up to 10,000 samples, configurable)
+- Detects statistical drift with **uncertainty consideration** (V2) ← Enhanced
+- **Uncertainty-aware drift recommendations** (V2) ← NEW
 - Monitors KPIs (HPE, availability, convergence time)
-- Triggers model retraining recommendations
+- Triggers model retraining with better confidence
 
 **Key Classes:**
 - `TelemetryAggregator` - Buffers and aggregates field data
-- `DriftDetector` - Statistical drift detection (z-score based)
+- `DriftDetector` - Statistical drift detection with uncertainty (V2)
 - `PerformanceMonitor` - Tracks system KPIs
 - `FeedbackLoop` - Orchestrates monitoring pipeline
 
-**Drift Detection Thresholds:**
+**Drift Detection (V2 Enhanced):**
 ```python
+cfg.feedback.buffer_size = 10000
+cfg.feedback.drift_method = "zscore"                # V2: Configurable
 cfg.feedback.drift_zscore_threshold = 3.0
 cfg.feedback.drift_window_size = 1000
+cfg.feedback.kpi_degradation_threshold = 0.1        # V2: NEW
 cfg.feedback.drift_detection_enabled = True
 ```
 
 **Key Output:**
-- Drift detection results (metric affected, magnitude, recommendation)
-- Aggregated statistics (HPE mean/std, availability, convergence)
+- Drift detection with uncertainty estimates (V2)
+- Recommendation: "retrain" if drift + high uncertainty
+- Aggregated statistics with uncertainty tracking
 - Performance history for alerting
 
-**Example Usage:**
+**Example Usage (V2):**
 ```python
 from ai_feedback_loop import FeedbackLoop, FieldTelemetry
 import time
@@ -244,7 +296,7 @@ import time
 # Initialize feedback loop
 loop = FeedbackLoop()
 
-# Process field telemetry
+# Process field telemetry with V2 uncertainty
 telemetry = FieldTelemetry(
     timestamp=time.time(),
     vehicle_id="vehicle_001",
@@ -254,15 +306,19 @@ telemetry = FieldTelemetry(
     convergence_time_sec=32.0,
     num_satellites=15,
     signal_strength_avg_db=28.0,
-    multipath_indicator=0.2
+    multipath_indicator=0.2,
+    model_uncertainty=0.08,                # V2 NEW
+    inference_confidence=0.92               # V2 NEW
 )
 
-# Process and get drift detection
+# Process and get enhanced drift detection
 result = loop.process_telemetry(telemetry)
 if result and result.drift_detected:
-    print(f"Drift in {result.metric_affected}: {result.recommendation}")
+    print(f"Drift in {result.metric_affected}")
+    print(f"Uncertainty: {result.uncertainty:.4f}")  # V2 NEW
+    print(f"Recommendation: {result.recommendation}")
 
-# Get aggregated statistics
+# Get aggregated statistics with uncertainty
 stats = loop.get_aggregated_statistics()
 print(f"Avg HPE: {stats['telemetry']['hpe_mean_cm']:.2f}cm")
 print(f"Availability: {stats['telemetry']['availability_mean_pct']:.1f}%")
@@ -273,18 +329,18 @@ print(f"Availability: {stats['telemetry']['availability_mean_pct']:.1f}%")
 python ai_feedback_loop.py
 ```
 
----
-
 ### STAGE 5: Natural Language Intent Parser (5-15 seconds)
 
-**File:** `ai_intent_parser.py`
+**File:** `ai_intent_parser.py` (✓ V2 Updated)
 
-**What It Does:**
+**What It Does (V2 Enhanced):**
 - Parses operator intent from natural language
 - Detects canonical intent type (3 types)
+- **Validates extracted constraints** against ranges (V2) ← NEW
 - Extracts numeric constraints from text
 - Generates intent embeddings (32D)
 - Confidence scoring based on keywords/phrases
+- **Provides validation feedback** for invalid constraints (V2) ← NEW
 
 **Supported Intent Types:**
 ```python
@@ -293,13 +349,22 @@ IntentType.MAXIMIZE_RELIABILITY    # 98%+ FIX availability
 IntentType.OPTIMIZE_SPECTRUM       # Minimal bandwidth usage
 ```
 
+**Constraint Validation Ranges (V2):**
+```python
+HPE:         [0.1, 100.0] cm
+Availability: [50, 99.99] %
+Spectrum:     [0.1, 10.0] Mbps
+Convergence:  [1, 300] seconds
+```
+
 **Key Output:**
 - Parsed intent type
-- Extracted constraints (HPE, availability, spectrum, convergence)
+- **Validated** constraints (V2) with status
 - Intent embeddings (32D vectors)
 - Confidence scores (0-1)
+- Validation notes for failed constraints (V2)
 
-**Example Usage:**
+**Example Usage (V2):**
 ```python
 from ai_intent_parser import IntentParser
 
@@ -310,20 +375,25 @@ parser = IntentParser()
 text = "I need sub-3cm accuracy for drone inspection at 95% availability"
 result = parser.parse(text)
 
-# Access results
+# Access V2 results with validation
 print(result.intent_type.value)      # "maximize_accuracy"
 print(result.confidence)              # 0.85
 print(result.constraints.target_hpe_cm)        # 3.0
 print(result.constraints.min_availability_pct) # 95.0
+print(result.constraints.is_valid)             # True (V2)
+print(result.constraints.validation_notes)     # "Valid" (V2)
 print(result.intent_embedding.shape)  # (32,) - 32D embedding
+
+# Serialized output includes validation (V2)
+output = parser.to_dict(result)
+print(output['constraints']['is_valid'])
+print(output['constraints']['validation_notes'])
 ```
 
 **Run Individually:**
 ```bash
 python ai_intent_parser.py
 ```
-
----
 
 ## ⚙️ CONFIGURATION GUIDE
 

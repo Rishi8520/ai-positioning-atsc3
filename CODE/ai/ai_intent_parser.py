@@ -5,6 +5,7 @@
 # DATE: January 2026
 # PURPOSE: Parse operator/fleet intents to canonical positioning goals
 # PRODUCTION: Phase 3 - Ready for Deployment
+# V2 UPDATES: Config integration, enhanced validation, constraint checking
 # ===============================================================================
 
 import re
@@ -18,6 +19,14 @@ import numpy as np
 import torch
 import torch.nn as nn
 from transformers import AutoTokenizer, AutoModel
+
+# V2 Configuration
+try:
+    from config_v2 import cfg
+    USE_V2_CONFIG = True
+except ImportError:
+    USE_V2_CONFIG = False
+    cfg = None
 
 # ===============================================================================
 # LOGGING CONFIGURATION
@@ -46,23 +55,58 @@ class IntentType(Enum):
 
 @dataclass
 class IntentConstraints:
-    """Extracted constraints from parsed intent"""
+    """Extracted constraints from parsed intent (V2 validated)"""
     target_hpe_cm: float  # Horizontal positioning error target (cm)
     min_availability_pct: float  # Minimum RTK FIX availability (%)
     max_spectrum_mbps: float  # Maximum spectrum budget (Mbps)
     max_convergence_sec: float  # Maximum convergence time (seconds)
     preferred_region: Optional[str] = None  # Geographic preference
+    is_valid: bool = False  # NEW: Validation flag
+    validation_notes: str = ""  # NEW: Validation feedback
+    
+    def validate(self) -> bool:
+        """
+        NEW: Validate constraints are within reasonable ranges
+        
+        Returns:
+            True if valid, updates is_valid flag
+        """
+        valid = True
+        notes = []
+        
+        if self.target_hpe_cm < 0.1 or self.target_hpe_cm > 100.0:
+            valid = False
+            notes.append(f"HPE {self.target_hpe_cm}cm out of range [0.1, 100.0]")
+        
+        if self.min_availability_pct < 50.0 or self.min_availability_pct > 99.99:
+            valid = False
+            notes.append(f"Availability {self.min_availability_pct}% out of range [50, 99.99]")
+        
+        if self.max_spectrum_mbps < 0.1 or self.max_spectrum_mbps > 10.0:
+            valid = False
+            notes.append(f"Spectrum {self.max_spectrum_mbps}Mbps out of range [0.1, 10.0]")
+        
+        if self.max_convergence_sec < 1.0 or self.max_convergence_sec > 300.0:
+            valid = False
+            notes.append(f"Convergence {self.max_convergence_sec}s out of range [1, 300]")
+        
+        self.is_valid = valid
+        self.validation_notes = "; ".join(notes) if notes else "Valid"
+        
+        return valid
 
 
 @dataclass
 class CanonicalIntent:
-    """Structured output from intent parser"""
+    """Structured output from intent parser (V2 enhanced)"""
     intent_type: IntentType
     confidence: float  # Confidence score (0-1)
     constraints: IntentConstraints
     raw_text: str
     intent_embedding: np.ndarray  # 32D embedding
     reasoning: str  # Explanation of parsing decision
+    embedding_dim: int = 32  # NEW: Track embedding dimension
+    model_version: str = "v2"  # NEW: Track model version
 
 
 # ===============================================================================
@@ -145,7 +189,7 @@ class IntentEmbeddingModel(nn.Module):
 # ===============================================================================
 
 class IntentParser:
-    """Intent parser for PPaaS system"""
+    """Intent parser for PPaaS system (V2 compatible)"""
     
     def __init__(self, pretrained_model="sentence-transformers/all-MiniLM-L6-v2"):
         """
@@ -164,6 +208,18 @@ class IntentParser:
         self.intent_encoder = IntentEmbeddingModel(input_dim=384, output_dim=32)
         self.intent_encoder.eval()
         
+        # V2: Use config if available
+        if USE_V2_CONFIG and cfg:
+            confidence_threshold = cfg.intent.confidence_threshold
+            embedding_dim = cfg.intent.embedding_dim
+        else:
+            confidence_threshold = 0.6
+            embedding_dim = 32
+        
+        self.confidence_threshold = confidence_threshold
+        self.embedding_dim = embedding_dim
+        
+        # V2: Enhanced threshold mapping
         self.constraint_thresholds = {
             IntentType.MAXIMIZE_ACCURACY: {
                 "target_hpe_cm": 3.0,
@@ -184,6 +240,8 @@ class IntentParser:
                 "max_convergence_sec": 60.0
             }
         }
+        
+        logger.info(f"IntentParser initialized (confidence threshold={confidence_threshold})")
     
     def _get_text_embedding(self, text: str) -> np.ndarray:
         """Get 384D embedding from pretrained transformer"""
@@ -257,13 +315,13 @@ class IntentParser:
     
     def parse(self, intent_text: str) -> CanonicalIntent:
         """
-        Parse free-text intent to structured format
+        Parse free-text intent to structured format (V2 with validation)
         
         Args:
             intent_text: Operator's natural language intent
         
         Returns:
-            CanonicalIntent with parsed intent type, constraints, embedding
+            CanonicalIntent with parsed intent type, validated constraints, embedding
         """
         logger.info(f"Parsing intent: {intent_text[:100]}...")
         
@@ -291,6 +349,11 @@ class IntentParser:
         
         constraints = IntentConstraints(**constraints_dict)
         
+        # NEW: Validate constraints
+        is_valid = constraints.validate()
+        if not is_valid:
+            logger.warning(f"Constraint validation failed: {constraints.validation_notes}")
+        
         # Generate intent embedding
         intent_embedding = self._generate_intent_embedding(intent_text, detected_intent)
         
@@ -299,7 +362,8 @@ class IntentParser:
             f"Detected intent: {detected_intent.value} (confidence: {confidence:.2f}) | "
             f"HPE target: {constraints.target_hpe_cm}cm | "
             f"Availability: {constraints.min_availability_pct}% | "
-            f"Spectrum: {constraints.max_spectrum_mbps}Mbps"
+            f"Spectrum: {constraints.max_spectrum_mbps}Mbps | "
+            f"Status: {'✓ Valid' if is_valid else '✗ ' + constraints.validation_notes}"
         )
         
         logger.info(reasoning)
@@ -310,18 +374,26 @@ class IntentParser:
             constraints=constraints,
             raw_text=intent_text,
             intent_embedding=intent_embedding,
-            reasoning=reasoning
+            reasoning=reasoning,
+            embedding_dim=self.embedding_dim,
+            model_version="v2"
         )
     
     def to_dict(self, canonical_intent: CanonicalIntent) -> Dict:
-        """Serialize CanonicalIntent to dictionary"""
+        """Serialize CanonicalIntent to dictionary (V2 enhanced)"""
         return {
             "intent_type": canonical_intent.intent_type.value,
             "confidence": canonical_intent.confidence,
-            "constraints": asdict(canonical_intent.constraints),
+            "constraints": {
+                **asdict(canonical_intent.constraints),
+                "is_valid": canonical_intent.constraints.is_valid,
+                "validation_notes": canonical_intent.constraints.validation_notes
+            },
             "raw_text": canonical_intent.raw_text,
             "intent_embedding": canonical_intent.intent_embedding.tolist(),
-            "reasoning": canonical_intent.reasoning
+            "reasoning": canonical_intent.reasoning,
+            "embedding_dim": canonical_intent.embedding_dim,
+            "model_version": canonical_intent.model_version
         }
 
 
