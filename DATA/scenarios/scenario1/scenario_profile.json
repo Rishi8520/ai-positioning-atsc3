@@ -5,11 +5,13 @@
   "scenario_type": "drone_rural",
   
   "files": {
-    "rover_obs": "rover.obs",
+    "rover_obs": "rover_rnx.obs",
     "nav_file": "nav.nav",
-    "base_obs": "base.obs",
+    "base_obs": "base_rnx.obs",
     "ground_truth": "ground_truth.pos",
-    "rtcm_file": "corrections.rtcm"
+    "rtcm_file": "corrections.rtcm",
+    "rover_obs_crinex": "rover.obs",
+    "base_obs_crinex": "base.obs"
   },
   
   "station_coordinates": {

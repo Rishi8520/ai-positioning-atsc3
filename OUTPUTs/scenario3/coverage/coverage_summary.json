@@ -1,0 +1,22 @@
+{
+  "total_cells": 7815,
+  "good_cells": 7815,
+  "marginal_cells": 0,
+  "bad_cells": 0,
+  "good_pct": 100.0,
+  "marginal_pct": 0.0,
+  "bad_pct": 0.0,
+  "snr_good_threshold_db": 20.0,
+  "snr_marginal_threshold_db": 10.0,
+  "grid_resolution_m": 2000.0,
+  "max_range_km": 100.0,
+  "tx_config": {
+    "lat": 37.41325153460245,
+    "lon": -122.08153009830576,
+    "height_m": 30.0,
+    "power_dbm": 45.0,
+    "frequency_mhz": 600.0
+  },
+  "rx_height_m": 1.5,
+  "noise_floor_dbm": -105.0
+}

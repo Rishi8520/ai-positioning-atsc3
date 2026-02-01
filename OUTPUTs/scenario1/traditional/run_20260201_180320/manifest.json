@@ -1,0 +1,20 @@
+{
+  "run_id": "run_20260201_180320",
+  "scenario_name": "scenario1_drone_rural",
+  "mode": "traditional",
+  "intent": "provide_sub_3cm_accuracy",
+  "timestamp": "2026-02-01T18:03:20.734678",
+  "rtklib_version": "unknown",
+  "config_file": "",
+  "rover_file": "/Users/anirudhnishtala/Desktop/ai-positioning-atsc3/DATA/scenarios/scenario1/rover.obs",
+  "base_file": "/Users/anirudhnishtala/Desktop/ai-positioning-atsc3/DATA/scenarios/scenario1/base.obs",
+  "nav_file": "/Users/anirudhnishtala/Desktop/ai-positioning-atsc3/DATA/scenarios/scenario1/nav.nav",
+  "ground_truth_file": "",
+  "rnx2rtkp_log": "",
+  "success": false,
+  "error_message": "CRINEX files detected and crx2rnx tool not found. Files: /Users/anirudhnishtala/Desktop/ai-positioning-atsc3/DATA/scenarios/scenario1/rover.obs, /Users/anirudhnishtala/Desktop/ai-positioning-atsc3/DATA/scenarios/scenario1/base.obs",
+  "failure_reason": "crinex_not_converted",
+  "requires_crx2rnx": true,
+  "duration_sec": 0.0,
+  "synthetic": false
+}

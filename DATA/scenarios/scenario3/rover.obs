@@ -1,0 +1,18 @@
+     3.04           OBSERVATION DATA    M                   RINEX VERSION / TYPE
+populate_scenario3  GNSS Module         20260201 190458 UTC PGM / RUN BY / DATE
+ROVER                                                       MARKER NAME
+UrbanNav-Whampoa                                            OBSERVER / AGENCY
+SYNTHETIC           GNSS-SIM            1.0                 REC # / TYPE / VERS
+SYNTHETIC           INTERNAL                                ANT # / TYPE
+  -2418525.4270  5386185.4750  2405448.6440                 APPROX POSITION XYZ
+        0.0000        0.0000        0.0000                  ANTENNA: DELTA H/E/N
+     1     1    0                                           WAVELENGTH FACT L1/2
+     1    C1C                                               SYS / # / OBS TYPES
+UrbanNav-HK-Data20190428 (Whampoa) inspired                 COMMENT
+Generated for scenario3 urban canyon testing                COMMENT
+                                                            END OF HEADER
+> 2019 04 28 00 00 00.00  0  4
+> 2019 04 28 00 00 01.00  0  4
+> 2019 04 28 00 00 02.00  0  4
+> 2019 04 28 00 00 03.00  0  4
+> 2019 04 28 00 00 04.00  0  4

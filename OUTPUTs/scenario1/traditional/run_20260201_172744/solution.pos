@@ -1,0 +1,23 @@
+% program   : RTKLIB ver.2.4.2
+% inp file  : /Users/anirudhnishtala/Desktop/ai-positioning-atsc3/DATA/scenarios/scenario1/rover.obs
+% inp file  : /Users/anirudhnishtala/Desktop/ai-positioning-atsc3/DATA/scenarios/scenario1/base.obs
+% inp file  : /Users/anirudhnishtala/Desktop/ai-positioning-atsc3/DATA/scenarios/scenario1/nav.nav
+% obs start : 1970/01/01 00:00:00.0 GPST (week-522 -259200.0s)
+% obs end   : 1970/01/01 00:00:00.0 GPST (week-522 -259200.0s)
+% pos mode  : kinematic
+% freqs     : L1
+% solution  : forward
+% elev mask : 15.0 deg
+% dynamics  : on
+% tidecorr  : off
+% ionos opt : broadcast
+% tropo opt : saastamoinen
+% ephemeris : broadcast
+% amb res   : continuous
+% val thres : 3.0
+% antenna1  :                       ( 0.0000  0.0000  0.0000)
+% antenna2  :                       ( 0.0000  0.0000  0.0000)
+% ref pos   : 37.417679820-122.090811920  825.7036
+%
+% (lat/lon/height=WGS84/ellipsoidal,Q=1:fix,2:float,3:sbas,4:dgps,5:single,6:ppp,ns=# of satellites)
+%  GPST          latitude(deg) longitude(deg)  height(m)   Q  ns   sdn(m)   sde(m)   sdu(m)  sdne(m)  sdeu(m)  sdun(m) age(s)  ratio

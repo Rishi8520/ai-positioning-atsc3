@@ -1,0 +1,26 @@
+{
+  "run_id": "run_20260201_172744",
+  "scenario_name": "scenario2_vehicle_suburban",
+  "mode": "traditional",
+  "intent": "minimize_bandwidth_maintain_accuracy",
+  "timestamp": "2026-02-01T17:27:44.717368",
+  "rtklib_version": "",
+  "config_file": "",
+  "rover_file": "/Users/anirudhnishtala/Desktop/ai-positioning-atsc3/DATA/scenarios/scenario2/rover.obs",
+  "base_file": "/Users/anirudhnishtala/Desktop/ai-positioning-atsc3/DATA/scenarios/scenario2/base.obs",
+  "nav_file": "/Users/anirudhnishtala/Desktop/ai-positioning-atsc3/DATA/scenarios/scenario2/nav.nav",
+  "ground_truth_file": "/Users/anirudhnishtala/Desktop/ai-positioning-atsc3/DATA/scenarios/scenario2/gt.csv",
+  "rnx2rtkp_log": "",
+  "success": true,
+  "error_message": "",
+  "duration_sec": 0.029169,
+  "synthetic": true,
+  "synthetic_info": {
+    "synthetic": true,
+    "mode": "traditional",
+    "seed": 42,
+    "method": "deterministic_simulation",
+    "n_epochs": 300,
+    "corrections_source": "corrections_schedule.json"
+  }
+}

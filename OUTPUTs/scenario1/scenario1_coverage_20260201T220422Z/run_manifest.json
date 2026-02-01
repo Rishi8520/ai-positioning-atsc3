@@ -1,0 +1,31 @@
+{
+  "run_id": "scenario1_coverage_20260201T220422Z",
+  "scenario": "scenario1",
+  "timestamp": "20260201T220422Z",
+  "args": {
+    "scenario": "scenario1",
+    "scenario_root": "/Users/anirudhnishtala/Desktop/ai-positioning-atsc3/DATA/scenarios",
+    "out_dir": "/Users/anirudhnishtala/Desktop/ai-positioning-atsc3/OUTPUTs",
+    "grid_res_m": 500.0,
+    "max_range_km": 10.0,
+    "tx_lat": null,
+    "tx_lon": null,
+    "tx_height_m": 30.0,
+    "tx_power_dbm": 60.0,
+    "frequency_mhz": 600.0,
+    "rx_height_m": 1.5,
+    "noise_floor_dbm": -105.0,
+    "snr_good_db": 20.0,
+    "snr_marginal_db": 10.0,
+    "tx_lat_resolved": 37.41767982046591,
+    "tx_lon_resolved": -122.09081191973812
+  },
+  "success": true,
+  "error_message": "",
+  "output_files": [
+    "coverage_map.csv",
+    "coverage_summary.json",
+    "run_manifest.json"
+  ],
+  "duration_sec": 0.052313804626464844
+}

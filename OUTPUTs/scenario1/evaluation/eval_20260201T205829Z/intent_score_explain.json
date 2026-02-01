@@ -1,0 +1,73 @@
+{
+  "intent": "robustness",
+  "intent_description": "Prioritize availability, stability (fewer fix losses, fewer mode transitions)",
+  "simulated": false,
+  "final_score": 0.0,
+  "formula": "score = sum(weight_i * normalized_value_i) / sum(|weight_i|)",
+  "total_weight": 33.0,
+  "weighted_sum": 0.0,
+  "computation_steps": [
+    "+10.0 * normalize(availability_pct=0.0) = +10.0 * 0.0000 = +0.0000",
+    "+5.0 * normalize(fix_rate_pct=0.0) = +5.0 * 0.0000 = +0.0000",
+    "-8.0 * normalize(num_fix_losses=0) = -8.0 * 0.0000 = -0.0000",
+    "-6.0 * normalize(num_mode_transitions=0) = -6.0 * 0.0000 = -0.0000",
+    "-4.0 * normalize(single_rate_pct=0.0) = -4.0 * 0.0000 = -0.0000"
+  ],
+  "breakdown": [
+    {
+      "metric": "availability_pct",
+      "raw_value": 0.0,
+      "normalized_value": 0.0,
+      "weight": 10.0,
+      "weighted_contribution": 0.0,
+      "normalizer_type": "linear",
+      "normalizer_params": {
+        "scale": 0.01
+      }
+    },
+    {
+      "metric": "fix_rate_pct",
+      "raw_value": 0.0,
+      "normalized_value": 0.0,
+      "weight": 5.0,
+      "weighted_contribution": 0.0,
+      "normalizer_type": "linear",
+      "normalizer_params": {
+        "scale": 0.01
+      }
+    },
+    {
+      "metric": "num_fix_losses",
+      "raw_value": 0,
+      "normalized_value": 0.0,
+      "weight": -8.0,
+      "weighted_contribution": -0.0,
+      "normalizer_type": "count_ratio",
+      "normalizer_params": {
+        "base": 10
+      }
+    },
+    {
+      "metric": "num_mode_transitions",
+      "raw_value": 0,
+      "normalized_value": 0.0,
+      "weight": -6.0,
+      "weighted_contribution": -0.0,
+      "normalizer_type": "count_ratio",
+      "normalizer_params": {
+        "base": 20
+      }
+    },
+    {
+      "metric": "single_rate_pct",
+      "raw_value": 0.0,
+      "normalized_value": 0.0,
+      "weight": -4.0,
+      "weighted_contribution": -0.0,
+      "normalizer_type": "linear",
+      "normalizer_params": {
+        "scale": 0.01
+      }
+    }
+  ]
+}

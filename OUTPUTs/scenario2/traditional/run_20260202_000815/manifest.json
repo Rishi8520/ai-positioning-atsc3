@@ -1,0 +1,16 @@
+{
+  "run_id": "run_20260202_000815",
+  "scenario_name": "scenario2_vehicle_suburban",
+  "mode": "traditional",
+  "intent": "minimize_bandwidth_maintain_accuracy",
+  "timestamp": "2026-02-02T00:08:15.749472",
+  "rtklib_version": "unknown",
+  "config_file": "/Users/anirudhnishtala/Desktop/ai-positioning-atsc3/OUTPUTs/scenario2/traditional/run_20260202_000815/rtklib.conf",
+  "rover_file": "/Users/anirudhnishtala/Desktop/ai-positioning-atsc3/DATA/scenarios/scenario2/rover.obs",
+  "base_file": "/Users/anirudhnishtala/Desktop/ai-positioning-atsc3/DATA/scenarios/scenario2/base.obs",
+  "nav_file": "/Users/anirudhnishtala/Desktop/ai-positioning-atsc3/DATA/scenarios/scenario2/nav.nav",
+  "ground_truth_file": "/Users/anirudhnishtala/Desktop/ai-positioning-atsc3/DATA/scenarios/scenario2/gt.csv",
+  "success": true,
+  "error_message": "",
+  "duration_sec": 1.836121
+}

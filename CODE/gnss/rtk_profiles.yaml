@@ -1,0 +1,392 @@
+# RTK Processing Profiles for RTKLIB
+# 
+# This file defines RTKLIB configuration profiles for different processing modes.
+# All tunables are controlled here - not hardcoded in Python.
+#
+# Profiles:
+#   - baseline: Conservative settings for traditional processing
+#   - optimised: Intent-driven profiles keyed by scenario intent
+#
+# Usage:
+#   --mode traditional => baseline profile
+#   --mode ai => optimised profile based on scenario intent
+#
+# Each profile contains RTKLIB key-value pairs that override defaults.
+
+# =============================================================================
+# BASELINE PROFILE (Traditional/Conservative)
+# =============================================================================
+# Used when --mode traditional is specified.
+# Conservative settings that work reliably but may not achieve best performance.
+
+baseline:
+  description: "Conservative baseline settings for reliable processing"
+  
+  # Positioning mode settings
+  pos1-posmode: "kinematic"
+  pos1-frequency: "l1"
+  pos1-soltype: "forward"
+  pos1-elmask: "15"
+  pos1-snrmask_r: "off"
+  pos1-snrmask_b: "off"
+  pos1-dynamics: "on"
+  pos1-tidecorr: "off"
+  pos1-ionoopt: "brdc"
+  pos1-tropopt: "saas"
+  pos1-sateph: "brdc"
+  pos1-posopt1: "off"
+  pos1-posopt2: "off"
+  pos1-posopt3: "off"
+  pos1-posopt4: "off"
+  pos1-posopt5: "off"
+  pos1-posopt6: "off"
+  pos1-navsys: "1"  # GPS only
+  
+  # Ambiguity resolution (conservative)
+  pos2-armode: "continuous"
+  pos2-gloarmode: "off"
+  pos2-bdsarmode: "off"
+  pos2-arthres: "3.0"
+  pos2-arthres1: "0.9999"
+  pos2-arthres2: "0.25"
+  pos2-arthres3: "0.1"
+  pos2-arthres4: "0.05"
+  pos2-arlockcnt: "0"
+  pos2-arelmask: "0"
+  pos2-arminfix: "10"
+  pos2-armaxiter: "1"
+  pos2-elmaskhold: "0"
+  pos2-aroutcnt: "5"
+  pos2-maxage: "30"
+  pos2-syncsol: "off"
+  pos2-slipthres: "0.05"
+  pos2-rejionno: "30"
+  pos2-rejgdop: "30"
+  pos2-niter: "1"
+  pos2-baselen: "0"
+  pos2-basesig: "0"
+  
+  # Output settings
+  out-solformat: "llh"
+  out-outhead: "on"
+  out-outopt: "on"
+  out-outvel: "off"
+  out-timesys: "gpst"
+  out-timeform: "tow"
+  out-timendec: "3"
+  out-degform: "deg"
+  out-fieldsep: ""
+  out-outsingle: "off"
+  out-maxsolstd: "0"
+  out-height: "ellipsoidal"
+  out-geoid: "internal"
+  out-solstatic: "all"
+  out-nmeaintv1: "0"
+  out-nmeaintv2: "0"
+  out-outstat: "off"
+  
+  # Statistics
+  stats-eratio1: "100"
+  stats-eratio2: "100"
+  stats-errphase: "0.003"
+  stats-errphaseel: "0.003"
+  stats-errphasebl: "0"
+  stats-errdoppler: "1"
+  stats-stdbias: "30"
+  stats-stdiono: "0.03"
+  stats-stdtrop: "0.3"
+  stats-prnaccelh: "10"
+  stats-prnaccelv: "10"
+  stats-prnbias: "0.0001"
+  stats-prniono: "0.001"
+  stats-prntrop: "0.0001"
+  stats-prnpos: "0"
+  stats-clkstab: "5e-12"
+
+
+# =============================================================================
+# OPTIMISED PROFILES (Intent-Driven)
+# =============================================================================
+# Used when --mode ai is specified.
+# Profile selected based on scenario intent field.
+
+optimised:
+  # ---------------------------------------------------------------------------
+  # Intent: provide_sub_3cm_accuracy
+  # For high-precision applications (surveying, drone mapping)
+  # ---------------------------------------------------------------------------
+  provide_sub_3cm_accuracy:
+    description: "Optimised for sub-3cm accuracy (drone surveying, precision agriculture)"
+    
+    # Use multi-constellation and dual frequency if available
+    pos1-posmode: "kinematic"
+    pos1-frequency: "l1"  # l1+l2 if dual-freq data available
+    pos1-soltype: "forward"
+    pos1-elmask: "10"  # Lower mask for more satellites
+    pos1-dynamics: "on"
+    pos1-ionoopt: "brdc"
+    pos1-tropopt: "saas"
+    pos1-navsys: "1"  # Can expand to "7" for GPS+GLO+GAL
+    
+    # Aggressive AR for high accuracy
+    pos2-armode: "fix-and-hold"
+    pos2-arthres: "2.5"  # Tighter threshold
+    pos2-arlockcnt: "5"  # Lock count for stability
+    pos2-arminfix: "3"  # Faster fix declaration
+    pos2-armaxiter: "5"  # More iterations
+    pos2-niter: "5"  # More filter iterations
+    pos2-maxage: "20"  # Tighter age limit
+    
+    # Output
+    out-solformat: "llh"
+    out-outhead: "on"
+    out-outopt: "on"
+    out-timesys: "gpst"
+    out-timeform: "tow"
+
+  # ---------------------------------------------------------------------------
+  # Intent: minimize_bandwidth_maintain_accuracy
+  # For bandwidth-constrained applications (vehicle navigation)
+  # ---------------------------------------------------------------------------
+  minimize_bandwidth_maintain_accuracy:
+    description: "Optimised for bandwidth efficiency while maintaining accuracy"
+    
+    pos1-posmode: "kinematic"
+    pos1-frequency: "l1"
+    pos1-soltype: "forward"
+    pos1-elmask: "12"
+    pos1-dynamics: "on"
+    pos1-ionoopt: "brdc"
+    pos1-tropopt: "saas"
+    pos1-navsys: "1"
+    
+    # Balanced AR settings
+    pos2-armode: "continuous"
+    pos2-arthres: "2.8"
+    pos2-arlockcnt: "3"
+    pos2-arminfix: "5"
+    pos2-armaxiter: "3"
+    pos2-niter: "3"
+    pos2-maxage: "30"
+    
+    # Output
+    out-solformat: "llh"
+    out-outhead: "on"
+    out-outopt: "on"
+    out-timesys: "gpst"
+    out-timeform: "tow"
+
+  # ---------------------------------------------------------------------------
+  # Intent: maximize_reliability_urban
+  # For challenging urban environments with multipath
+  # ---------------------------------------------------------------------------
+  maximize_reliability_urban:
+    description: "Optimised for reliability in challenging urban environments"
+    
+    pos1-posmode: "kinematic"
+    pos1-frequency: "l1"
+    pos1-soltype: "forward"
+    pos1-elmask: "15"  # Higher mask to reject low satellites
+    pos1-dynamics: "on"
+    pos1-ionoopt: "brdc"
+    pos1-tropopt: "saas"
+    pos1-navsys: "1"
+    
+    # Conservative AR with hold for urban
+    pos2-armode: "fix-and-hold"
+    pos2-arthres: "3.0"
+    pos2-arlockcnt: "10"  # Higher lock count for stability
+    pos2-arminfix: "5"
+    pos2-armaxiter: "5"
+    pos2-niter: "5"
+    pos2-elmaskhold: "15"  # Hold elevation mask
+    pos2-maxage: "45"  # Allow older corrections in signal blockage
+    pos2-slipthres: "0.1"  # Higher slip threshold for multipath
+    
+    # Output
+    out-solformat: "llh"
+    out-outhead: "on"
+    out-outopt: "on"
+    out-timesys: "gpst"
+    out-timeform: "tow"
+
+  # ---------------------------------------------------------------------------
+  # Intent: scenario2_suburban_multifreq
+  # Optimised for scenario2 with UrbanNav data (medium urban, multi-GNSS)
+  # ---------------------------------------------------------------------------
+  scenario2_suburban_multifreq:
+    description: "Optimised for scenario2 UrbanNav data - multi-constellation, adaptive AR"
+    
+    # Multi-constellation for better satellite availability
+    pos1-posmode: "kinematic"
+    pos1-frequency: "l1"
+    pos1-soltype: "forward"
+    pos1-elmask: "12"  # Moderate mask for suburban
+    pos1-dynamics: "on"
+    pos1-ionoopt: "brdc"
+    pos1-tropopt: "saas"
+    pos1-navsys: "7"  # GPS + GLONASS + Galileo (if available in data)
+    
+    # Adaptive AR for varying conditions
+    pos2-armode: "fix-and-hold"
+    pos2-arthres: "2.5"
+    pos2-arlockcnt: "5"
+    pos2-arminfix: "5"
+    pos2-armaxiter: "4"
+    pos2-niter: "4"
+    pos2-maxage: "45"
+    pos2-slipthres: "0.05"
+    
+    # Output
+    out-solformat: "llh"
+    out-outhead: "on"
+    out-outopt: "on"
+    out-timesys: "gpst"
+    out-timeform: "tow"
+
+  # ---------------------------------------------------------------------------
+  # Default optimised profile (fallback)
+  # Used when intent doesn't match any specific profile
+  # ---------------------------------------------------------------------------
+  default:
+    description: "Default optimised settings (balanced performance)"
+    
+    pos1-posmode: "kinematic"
+    pos1-frequency: "l1"
+    pos1-soltype: "forward"
+    pos1-elmask: "10"
+    pos1-dynamics: "on"
+    pos1-ionoopt: "brdc"
+    pos1-tropopt: "saas"
+    pos1-navsys: "1"
+    
+    # Relaxed AR for better FLOAT/FIX chances
+    pos2-armode: "continuous"
+    pos2-arthres: "3.0"
+    pos2-arlockcnt: "0"
+    pos2-arminfix: "1"
+    pos2-armaxiter: "5"
+    pos2-niter: "5"
+    pos2-maxage: "30"
+    
+    # Output
+    out-solformat: "llh"
+    out-outhead: "on"
+    out-outopt: "on"
+    out-timesys: "gpst"
+    out-timeform: "tow"
+
+
+# =============================================================================
+# SCENARIO-SPECIFIC PROFILES
+# =============================================================================
+# These profiles can be loaded directly by scenario name for A/B testing
+
+scenarios:
+  # ---------------------------------------------------------------------------
+  # Scenario 2: Vehicle Suburban (UrbanNav HK Medium Urban)
+  # ---------------------------------------------------------------------------
+  scenario2:
+    baseline:
+      description: "Scenario2 baseline - GPS only, conservative settings"
+      pos1-posmode: "kinematic"
+      pos1-frequency: "l1"
+      pos1-soltype: "forward"
+      pos1-navsys: "1"  # GPS only
+      pos1-elmask: "15"
+      pos1-dynamics: "on"
+      pos1-ionoopt: "brdc"
+      pos1-tropopt: "saas"
+      pos2-armode: "continuous"
+      pos2-arthres: "3.0"
+      pos2-arlockcnt: "0"
+      pos2-arminfix: "10"
+      pos2-armaxiter: "1"
+      pos2-maxage: "30"
+      out-solformat: "llh"
+      out-outhead: "on"
+      out-outopt: "on"
+      out-timesys: "gpst"
+      out-timeform: "tow"
+    
+    optimised:
+      description: "Scenario2 optimised - Multi-GNSS, aggressive AR, tuned for UrbanNav"
+      pos1-posmode: "kinematic"
+      pos1-frequency: "l1"
+      pos1-soltype: "forward"
+      pos1-navsys: "7"  # GPS + GLO + GAL
+      pos1-elmask: "10"  # Lower mask for more satellites
+      pos1-dynamics: "on"
+      pos1-ionoopt: "brdc"
+      pos1-tropopt: "saas"
+      pos2-armode: "fix-and-hold"
+      pos2-arthres: "2.5"  # Tighter threshold
+      pos2-arlockcnt: "5"
+      pos2-arminfix: "3"  # Faster fix
+      pos2-armaxiter: "5"
+      pos2-niter: "3"
+      pos2-maxage: "60"  # Allow older corrections for urban gaps
+      pos2-slipthres: "0.05"
+      out-solformat: "llh"
+      out-outhead: "on"
+      out-outopt: "on"
+      out-timesys: "gpst"
+      out-timeform: "tow"
+
+  # ---------------------------------------------------------------------------
+  # Scenario 3: Dense Urban Canyon (UrbanNav HK Whampoa Deep Urban)
+  # ---------------------------------------------------------------------------
+  scenario3:
+    baseline:
+      description: "Scenario3 baseline - GPS only, conservative settings for urban canyon"
+      pos1-posmode: "kinematic"
+      pos1-frequency: "l1"
+      pos1-soltype: "forward"
+      pos1-navsys: "1"  # GPS only
+      pos1-elmask: "15"
+      pos1-dynamics: "on"
+      pos1-ionoopt: "brdc"
+      pos1-tropopt: "saas"
+      pos2-armode: "continuous"
+      pos2-arthres: "3.0"
+      pos2-arlockcnt: "0"
+      pos2-arminfix: "10"
+      pos2-armaxiter: "1"
+      pos2-maxage: "30"
+      pos2-slipthres: "0.05"
+      out-solformat: "llh"
+      out-outhead: "on"
+      out-outopt: "on"
+      out-timesys: "gpst"
+      out-timeform: "tow"
+    
+    optimised:
+      description: "Scenario3 optimised - Multi-GNSS, fix-and-hold, tuned for deep urban canyon"
+      # Key optimisations for urban canyon:
+      # 1. Higher elevation mask (20°) to reject NLOS from low satellites
+      # 2. Multi-constellation for better satellite geometry in limited sky view
+      # 3. fix-and-hold AR to maintain fix through brief signal blockage
+      # 4. Longer maxage to allow older corrections during signal gaps
+      # 5. Higher slip threshold to handle multipath-induced cycle slips
+      pos1-posmode: "kinematic"
+      pos1-frequency: "l1"
+      pos1-soltype: "forward"
+      pos1-navsys: "7"  # GPS + GLO + GAL for better urban availability
+      pos1-elmask: "20"  # Higher mask to reject NLOS (key for urban canyon)
+      pos1-dynamics: "on"
+      pos1-ionoopt: "brdc"
+      pos1-tropopt: "saas"
+      pos2-armode: "fix-and-hold"  # Hold fix through brief blockage
+      pos2-arthres: "2.5"  # Tighter threshold for reliable fix
+      pos2-arlockcnt: "10"  # Higher lock count for stability in multipath
+      pos2-arminfix: "5"
+      pos2-armaxiter: "5"
+      pos2-niter: "5"
+      pos2-elmaskhold: "20"  # Match elevation mask for hold
+      pos2-maxage: "90"  # Allow older corrections for urban signal gaps
+      pos2-slipthres: "0.1"  # Higher slip threshold for multipath
+      out-solformat: "llh"
+      out-outhead: "on"
+      out-outopt: "on"
+      out-timesys: "gpst"
+      out-timeform: "tow"

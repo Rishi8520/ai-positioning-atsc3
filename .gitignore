@@ -1,3 +1,11 @@
 
 # macOS junk
 .DS_Store
+
+# Downloaded raw GNSS data (large files)
+DATA/scenarios/*/raw/
+*.bag
+*.bag.tar.gz
+# Large generated files
+OUTPUTs/**/coverage_map.csv
+OUTPUTs/**/*_coverage_*/

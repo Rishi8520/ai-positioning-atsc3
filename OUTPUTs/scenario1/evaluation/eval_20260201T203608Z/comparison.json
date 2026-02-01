@@ -1,0 +1,46 @@
+{
+  "scenario": "scenario1",
+  "timestamp": "20260201T203608Z",
+  "simulated": false,
+  "data_source": "unknown",
+  "baseline": {
+    "horizontal_error_rms_m": null,
+    "horizontal_error_p95_m": null,
+    "vertical_error_rms_m": null,
+    "vertical_error_p95_m": null,
+    "fix_rate_pct": 0.0,
+    "float_rate_pct": 0.0,
+    "single_rate_pct": 0.0,
+    "availability_pct": 0.0,
+    "ttff_sec": null,
+    "num_mode_transitions": 0,
+    "num_fix_losses": 0,
+    "total_epochs": 0
+  },
+  "optimised": {
+    "horizontal_error_rms_m": null,
+    "horizontal_error_p95_m": null,
+    "vertical_error_rms_m": null,
+    "vertical_error_p95_m": null,
+    "fix_rate_pct": 0.0,
+    "float_rate_pct": 0.0,
+    "single_rate_pct": 0.0,
+    "availability_pct": 0.0,
+    "ttff_sec": null,
+    "num_mode_transitions": 0,
+    "num_fix_losses": 0,
+    "total_epochs": 0
+  },
+  "delta": {
+    "horizontal_error_rms_delta_m": null,
+    "horizontal_error_p95_delta_m": null,
+    "vertical_error_rms_delta_m": null,
+    "vertical_error_p95_delta_m": null,
+    "fix_rate_delta_pct": 0.0,
+    "float_rate_delta_pct": 0.0,
+    "availability_delta_pct": 0.0,
+    "ttff_delta_sec": null,
+    "mode_transitions_delta": 0,
+    "fix_losses_delta": 0
+  }
+}

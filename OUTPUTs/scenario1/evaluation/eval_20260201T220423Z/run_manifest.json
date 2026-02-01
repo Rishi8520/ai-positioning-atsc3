@@ -1,0 +1,117 @@
+{
+  "run_id": "eval_20260201T220423Z",
+  "scenario": "scenario1",
+  "timestamp": "20260201T220423Z",
+  "simulated": false,
+  "data_source": "unknown",
+  "rover_obs_path": "/Users/anirudhnishtala/Desktop/ai-positioning-atsc3/DATA/scenarios/scenario1/rover_rnx.obs",
+  "rover_obs_size_bytes": 17320931,
+  "base_obs_path": "/Users/anirudhnishtala/Desktop/ai-positioning-atsc3/DATA/scenarios/scenario1/base_rnx.obs",
+  "base_obs_size_bytes": 17867847,
+  "nav_file_path": "/Users/anirudhnishtala/Desktop/ai-positioning-atsc3/DATA/scenarios/scenario1/nav.nav",
+  "nav_file_size_bytes": 283555,
+  "ground_truth_path": "",
+  "ground_truth_size_bytes": 0,
+  "scenario_profile_hash": "4e56236076c2d51f",
+  "scenario_profile_snapshot": {
+    "name": "scenario1_drone_rural",
+    "description": "High-accuracy drone surveying in rural/agricultural area with clear sky view",
+    "intent": "provide_sub_3cm_accuracy",
+    "scenario_type": "drone_rural",
+    "files": {
+      "rover_obs": "rover_rnx.obs",
+      "nav_file": "nav.nav",
+      "base_obs": "base_rnx.obs",
+      "ground_truth": "ground_truth.pos",
+      "rtcm_file": "corrections.rtcm",
+      "rover_obs_crinex": "rover.obs",
+      "base_obs_crinex": "base.obs"
+    },
+    "station_coordinates": {
+      "x_ecef": -2694892.46,
+      "y_ecef": -4297557.47,
+      "z_ecef": 3854813.42
+    },
+    "environment": {
+      "sky_view": "open",
+      "multipath": "low",
+      "signal_quality": "excellent",
+      "baseline_km": 5.0,
+      "dynamics": "medium"
+    },
+    "traditional_config": {
+      "rtklib": {
+        "pos1-posmode": "kinematic",
+        "pos1-frequency": "l1",
+        "pos1-soltype": "forward",
+        "pos1-navsys": "1",
+        "pos1-elmask": "15",
+        "pos1-ionoopt": "brdc",
+        "pos1-tropopt": "saas",
+        "pos2-armode": "continuous",
+        "pos2-arthres": "3.0",
+        "pos2-arlockcnt": "0",
+        "pos2-arminfix": "10",
+        "pos2-armaxiter": "1"
+      },
+      "broadcast": {
+        "fec_ldpc_rate": "RATE_8_15",
+        "fec_rs_symbols": 16,
+        "fec_overhead_pct": 15.0,
+        "modulation": "QPSK",
+        "fft_size": "FFT_8K",
+        "guard_interval": "GI_1_8",
+        "update_frequency_hz": 1.0,
+        "tile_resolution": "medium",
+        "plp_mode": "fixed"
+      }
+    },
+    "ai_config": {
+      "rtklib": {
+        "pos1-posmode": "kinematic",
+        "pos1-frequency": "l1+l2",
+        "pos1-soltype": "forward",
+        "pos1-navsys": "7",
+        "pos1-elmask": "10",
+        "pos1-ionoopt": "brdc",
+        "pos1-tropopt": "saas",
+        "pos2-armode": "fix-and-hold",
+        "pos2-arthres": "2.5",
+        "pos2-arlockcnt": "5",
+        "pos2-arminfix": "5",
+        "pos2-armaxiter": "2"
+      },
+      "broadcast": {
+        "fec_ldpc_rate": "RATE_6_15",
+        "fec_rs_symbols": 24,
+        "fec_overhead_pct": 40.0,
+        "modulation": "QPSK",
+        "fft_size": "FFT_8K",
+        "guard_interval": "GI_1_4",
+        "update_frequency_hz": 5.0,
+        "tile_resolution": "high",
+        "plp_mode": "mobile"
+      }
+    },
+    "evaluation": {
+      "accuracy_target_cm": 3.0,
+      "availability_target_pct": 95.0,
+      "convergence_target_sec": 30.0,
+      "target_spectral_efficiency": 1.0,
+      "target_latency_ms": 100.0,
+      "max_fec_overhead_pct": 50.0
+    },
+    "notes": {
+      "challenge": "Maintain sub-3cm accuracy during dynamic drone flight",
+      "ai_advantage": "Multi-constellation (GPS+GLO+GAL), dual-frequency, fix-and-hold AR, higher FEC for reliability",
+      "traditional_limitation": "Single constellation, single frequency, conservative AR settings"
+    }
+  },
+  "baseline_command": "/Users/anirudhnishtala/RTKLIB/app/rnx2rtkp/gcc/rnx2rtkp -p 2 -m 15 -n 1 -o /Users/anirudhnishtala/Desktop/ai-positioning-atsc3/OUTPUTs/scenario1/evaluation/eval_20260201T220423Z/baseline_run/solution.pos /Users/anirudhnishtala/Desktop/ai-positioning-atsc3/DATA/scenarios/scenario1/rover_rnx.obs /Users/anirudhnishtala/Desktop/ai-positioning-atsc3/DATA/scenarios/scenario1/base_rnx.obs /Users/anirudhnishtala/Desktop/ai-positioning-atsc3/DATA/scenarios/scenario1/nav.nav",
+  "optimised_command": "/Users/anirudhnishtala/RTKLIB/app/rnx2rtkp/gcc/rnx2rtkp -p 2 -m 20 -n 1 -o /Users/anirudhnishtala/Desktop/ai-positioning-atsc3/OUTPUTs/scenario1/evaluation/eval_20260201T220423Z/optimised_run/solution.pos /Users/anirudhnishtala/Desktop/ai-positioning-atsc3/DATA/scenarios/scenario1/rover_rnx.obs /Users/anirudhnishtala/Desktop/ai-positioning-atsc3/DATA/scenarios/scenario1/base_rnx.obs /Users/anirudhnishtala/Desktop/ai-positioning-atsc3/DATA/scenarios/scenario1/nav.nav",
+  "baseline_run_dir": "/Users/anirudhnishtala/Desktop/ai-positioning-atsc3/OUTPUTs/scenario1/evaluation/eval_20260201T220423Z/baseline_run",
+  "optimised_run_dir": "/Users/anirudhnishtala/Desktop/ai-positioning-atsc3/OUTPUTs/scenario1/evaluation/eval_20260201T220423Z/optimised_run",
+  "success": true,
+  "error_message": "",
+  "duration_sec": 44.74
+}

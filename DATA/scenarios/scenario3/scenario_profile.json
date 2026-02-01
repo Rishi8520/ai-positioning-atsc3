@@ -1,33 +1,30 @@
 {
-  "name": "scenario3_vehicle_urban",
-  "description": "Vehicle navigation in dense urban canyon with severe multipath and signal blockage",
+  "name": "scenario3_vehicle_urban_canyon",
+  "description": "Vehicle navigation - UrbanNav-HK-Data20190428 (Hong Kong, Whampoa (Deep Urban Canyon)). Deep urban canyon with high-rise buildings environment, 600s duration, 2.5km path. Severe multipath, NLOS, frequent mode transitions expected.",
   "intent": "maximize_reliability_urban",
   "scenario_type": "vehicle_urban",
-  
   "files": {
     "rover_obs": "rover.obs",
     "nav_file": "nav.nav",
     "base_obs": "base.obs",
-    "ground_truth": "ground_truth.pos",
+    "ground_truth": "gt.csv",
     "rtcm_file": "corrections.rtcm"
   },
-  
   "station_coordinates": {
-    "x_ecef": -2694200.00,
-    "y_ecef": -4298000.00,
-    "z_ecef": 3854200.00
+    "x_ecef": -2419088.6,
+    "y_ecef": 5385355.6,
+    "z_ecef": 2405805.1
   },
-  
   "environment": {
     "sky_view": "limited",
     "multipath": "severe",
     "signal_quality": "degraded",
-    "baseline_km": 10.0,
+    "baseline_km": 0.0,
     "dynamics": "variable",
     "urban_canyon_depth": "high",
-    "nlos_probability": 0.4
+    "nlos_probability": 0.4,
+    "urban_density": "high"
   },
-  
   "traditional_config": {
     "rtklib": {
       "pos1-posmode": "kinematic",
@@ -35,7 +32,6 @@
       "pos1-soltype": "forward",
       "pos1-navsys": "1",
       "pos1-elmask": "15",
-      "pos1-snrmask_r": "on",
       "pos1-ionoopt": "brdc",
       "pos1-tropopt": "saas",
       "pos1-dynamics": "on",
@@ -44,9 +40,7 @@
       "pos2-arlockcnt": "0",
       "pos2-arminfix": "10",
       "pos2-armaxiter": "1",
-      "pos2-maxage": "30",
-      "pos2-rejionno": "30",
-      "pos2-rejgdop": "30"
+      "pos2-maxage": "30"
     },
     "broadcast": {
       "fec_ldpc_rate": "RATE_8_15",
@@ -60,26 +54,23 @@
       "plp_mode": "fixed"
     }
   },
-  
   "ai_config": {
     "rtklib": {
       "pos1-posmode": "kinematic",
-      "pos1-frequency": "l1+l2+l5",
+      "pos1-frequency": "l1",
       "pos1-soltype": "forward",
-      "pos1-navsys": "63",
+      "pos1-navsys": "15",
       "pos1-elmask": "20",
-      "pos1-snrmask_r": "on",
-      "pos1-ionoopt": "dual-freq",
+      "pos1-ionoopt": "brdc",
       "pos1-tropopt": "saas",
       "pos1-dynamics": "on",
       "pos2-armode": "fix-and-hold",
-      "pos2-arthres": "2.0",
+      "pos2-arthres": "2.5",
       "pos2-arlockcnt": "10",
-      "pos2-arminfix": "20",
-      "pos2-armaxiter": "3",
-      "pos2-maxage": "120",
-      "pos2-rejionno": "50",
-      "pos2-rejgdop": "50",
+      "pos2-arminfix": "5",
+      "pos2-armaxiter": "5",
+      "pos2-elmaskhold": "20",
+      "pos2-maxage": "90",
       "pos2-slipthres": "0.1"
     },
     "broadcast": {
@@ -94,7 +85,6 @@
       "plp_mode": "mobile"
     }
   },
-  
   "evaluation": {
     "accuracy_target_cm": 30.0,
     "availability_target_pct": 80.0,
@@ -103,10 +93,38 @@
     "target_latency_ms": 50.0,
     "max_fec_overhead_pct": 70.0
   },
-  
   "notes": {
     "challenge": "Maintain positioning availability in severe urban canyon with multipath and NLOS",
-    "ai_advantage": "All constellations (GPS+GLO+GAL+BDS+QZS), triple-frequency, aggressive FEC, fast updates, high elevation mask to reject NLOS",
-    "traditional_limitation": "Single constellation insufficient satellites, fixed FEC fails under signal degradation"
+    "ai_advantage": "Multi-constellation for satellite availability, high elevation mask to reject NLOS, fix-and-hold through outages",
+    "traditional_limitation": "Single constellation insufficient satellites, cannot maintain fix through blockage",
+    "expected_characteristics": [
+      "Lower FIX percentage than scenario2",
+      "More FLOAT and SINGLE solutions",
+      "Frequent mode transitions",
+      "Higher position error during NLOS"
+    ]
+  },
+  "synthetic_metadata": {
+    "synthetic": true,
+    "real_data_source": "UrbanNav-inspired-synthetic",
+    "dataset_name": "UrbanNav-HK-Data20190428",
+    "dataset_location": "Hong Kong, Whampoa (Deep Urban Canyon)",
+    "dataset_date": "2019-04-28",
+    "dataset_url": "https://github.com/IPNL-POLYU/UrbanNavDataset",
+    "ground_truth_source": "Synthetic (UrbanNav-inspired)",
+    "ground_truth_accuracy_cm": 5.0,
+    "ground_truth_epochs": 600,
+    "environment_type": "deep_urban_canyon",
+    "challenge_characteristics": [
+      "Severe multipath from building reflections",
+      "Frequent NLOS (Non-Line-of-Sight) conditions",
+      "Limited sky visibility",
+      "Frequent signal blockage",
+      "Expected mode transitions (FIX\u2192FLOAT\u2192SINGLE)"
+    ],
+    "prepared_at": "2026-02-01T19:04:58.607160+00:00",
+    "prepared_by": "populate_scenario3_urbannav.py",
+    "synthetic_fallback": true,
+    "note": "Synthetic fallback - Dropbox download failed"
   }
 }

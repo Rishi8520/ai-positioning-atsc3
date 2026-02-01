@@ -1,0 +1,7 @@
+     3.04           N: GNSS NAV DATA    M: Mixed            RINEX VERSION / TYPE
+populate_scenario3  GNSS Module         20260201 190458 UTC PGM / RUN BY / DATE
+UrbanNav-HK-Data20190428 (Whampoa) inspired                 COMMENT
+Generated for scenario3 urban canyon testing                COMMENT
+Minimal nav file - RTKLIB may operate in SPP mode           COMMENT
+    18    LEAP SECONDS                                      LEAP SECONDS
+                                                            END OF HEADER

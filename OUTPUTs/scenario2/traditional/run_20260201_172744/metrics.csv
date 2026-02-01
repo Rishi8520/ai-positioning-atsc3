@@ -1,0 +1,12 @@
+metric,value
+total_epochs,300
+fix_epochs,162
+float_epochs,87
+single_epochs,51
+fix_pct,54.00
+float_pct,29.00
+single_pct,17.00
+availability_pct,83.00
+num_mode_transitions,170
+mean_convergence_sec,1.78
+synthetic,true

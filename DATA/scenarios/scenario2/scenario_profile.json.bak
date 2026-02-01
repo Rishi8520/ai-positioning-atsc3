@@ -1,0 +1,110 @@
+{
+  "name": "scenario2_vehicle_suburban",
+  "description": "Vehicle navigation in suburban/highway environment with moderate obstructions",
+  "intent": "minimize_bandwidth_maintain_accuracy",
+  "scenario_type": "vehicle_suburban",
+  "files": {
+    "rover_obs": "rover.obs",
+    "nav_file": "nav.nav",
+    "base_obs": "base.obs",
+    "ground_truth": "gt.csv",
+    "rtcm_file": "corrections.rtcm"
+  },
+  "station_coordinates": {
+    "x_ecef": -2694500.0,
+    "y_ecef": -4297800.0,
+    "z_ecef": 3854500.0
+  },
+  "environment": {
+    "sky_view": "partial",
+    "multipath": "moderate",
+    "signal_quality": "good",
+    "baseline_km": 15.0,
+    "dynamics": "high",
+    "snr_margin_db": 3.0
+  },
+  "traditional_config": {
+    "rtklib": {
+      "pos1-posmode": "kinematic",
+      "pos1-frequency": "l1",
+      "pos1-soltype": "forward",
+      "pos1-navsys": "1",
+      "pos1-elmask": "15",
+      "pos1-ionoopt": "brdc",
+      "pos1-tropopt": "saas",
+      "pos1-dynamics": "on",
+      "pos2-armode": "continuous",
+      "pos2-arthres": "3.0",
+      "pos2-arlockcnt": "0",
+      "pos2-arminfix": "10",
+      "pos2-armaxiter": "1",
+      "pos2-maxage": "30"
+    },
+    "broadcast": {
+      "fec_ldpc_rate": "RATE_8_15",
+      "fec_rs_symbols": 16,
+      "fec_overhead_pct": 15.0,
+      "modulation": "QAM16",
+      "fft_size": "FFT_8K",
+      "guard_interval": "GI_1_8",
+      "update_frequency_hz": 1.0,
+      "tile_resolution": "medium",
+      "plp_mode": "fixed"
+    }
+  },
+  "ai_config": {
+    "rtklib": {
+      "pos1-posmode": "kinematic",
+      "pos1-frequency": "l1+l2",
+      "pos1-soltype": "forward",
+      "pos1-navsys": "15",
+      "pos1-elmask": "10",
+      "pos1-ionoopt": "brdc",
+      "pos1-tropopt": "saas",
+      "pos1-dynamics": "on",
+      "pos2-armode": "fix-and-hold",
+      "pos2-arthres": "2.8",
+      "pos2-arlockcnt": "3",
+      "pos2-arminfix": "8",
+      "pos2-armaxiter": "2",
+      "pos2-maxage": "60"
+    },
+    "broadcast": {
+      "fec_ldpc_rate": "RATE_7_15",
+      "fec_rs_symbols": 20,
+      "fec_overhead_pct": 25.0,
+      "modulation": "QPSK",
+      "fft_size": "FFT_8K",
+      "guard_interval": "GI_1_8",
+      "update_frequency_hz": 2.0,
+      "tile_resolution": "medium",
+      "plp_mode": "mobile"
+    }
+  },
+  "evaluation": {
+    "accuracy_target_cm": 10.0,
+    "availability_target_pct": 90.0,
+    "convergence_target_sec": 45.0,
+    "target_spectral_efficiency": 1.5,
+    "target_latency_ms": 200.0,
+    "max_fec_overhead_pct": 35.0
+  },
+  "notes": {
+    "challenge": "Balance bandwidth efficiency with accuracy under marginal signal conditions",
+    "ai_advantage": "Adaptive FEC based on SNR, multi-GNSS for satellite availability, optimized bandwidth",
+    "traditional_limitation": "Fixed high-order modulation may fail in low SNR, single constellation gaps"
+  },
+  "synthetic_metadata": {
+    "synthetic": false,
+    "generator": "scenario_simulator.py",
+    "seed": 42,
+    "n_epochs": 300,
+    "generated_at": "2026-02-01T11:17:50.158746+00:00",
+    "scenario_type": "scenario2",
+    "real_data_source": "scenario1",
+    "rover_station": "CN14",
+    "base_station": "CN13",
+    "baseline_km": 12.5,
+    "prepared_at": "2026-02-01T17:48:32.182036+00:00"
+  }
+}

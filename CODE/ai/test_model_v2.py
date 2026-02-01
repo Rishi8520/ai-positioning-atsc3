@@ -1,6 +1,6 @@
 import numpy as np
 from pathlib import Path
-from ai_broadcast_decision_model_v2 import DecisionInferenceEngineV2
+from .ai_broadcast_decision_model_v2 import DecisionInferenceEngineV2
 
 # Load model
 model_path = Path(__file__).parent / "models" / "broadcast_decision_model_v2"

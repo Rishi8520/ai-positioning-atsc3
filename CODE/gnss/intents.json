@@ -1,0 +1,91 @@
+{
+  "_comment": "Intent-driven scoring configuration for RTK evaluation",
+  "_version": "1.0.0",
+  "_description": "Each intent defines weights for computed metrics. Score formula: sum(weight_i * normalized_value_i) / sum(|weight_i|). Higher score = better for that intent.",
+  
+  "intents": {
+    "accuracy": {
+      "description": "Prioritize horizontal/vertical accuracy and fix rate",
+      "weights": {
+        "horizontal_error_rms_m": -10.0,
+        "horizontal_error_p95_m": -5.0,
+        "vertical_error_rms_m": -8.0,
+        "vertical_error_p95_m": -4.0,
+        "fix_rate_pct": 8.0,
+        "availability_pct": 3.0
+      },
+      "normalizers": {
+        "horizontal_error_rms_m": {"type": "clamp_ratio", "max_val": 1.0, "min_val": 0.0},
+        "horizontal_error_p95_m": {"type": "clamp_ratio", "max_val": 2.0, "min_val": 0.0},
+        "vertical_error_rms_m": {"type": "clamp_ratio", "max_val": 1.5, "min_val": 0.0},
+        "vertical_error_p95_m": {"type": "clamp_ratio", "max_val": 3.0, "min_val": 0.0},
+        "fix_rate_pct": {"type": "linear", "scale": 0.01},
+        "availability_pct": {"type": "linear", "scale": 0.01}
+      }
+    },
+    
+    "robustness": {
+      "description": "Prioritize availability, stability (fewer fix losses, fewer mode transitions)",
+      "weights": {
+        "availability_pct": 10.0,
+        "fix_rate_pct": 5.0,
+        "num_fix_losses": -8.0,
+        "num_mode_transitions": -6.0,
+        "single_rate_pct": -4.0
+      },
+      "normalizers": {
+        "availability_pct": {"type": "linear", "scale": 0.01},
+        "fix_rate_pct": {"type": "linear", "scale": 0.01},
+        "num_fix_losses": {"type": "count_ratio", "base": 10},
+        "num_mode_transitions": {"type": "count_ratio", "base": 20},
+        "single_rate_pct": {"type": "linear", "scale": 0.01}
+      }
+    },
+    
+    "latency": {
+      "description": "Prioritize fast time-to-first-fix and convergence",
+      "weights": {
+        "ttff_sec": -10.0,
+        "fix_rate_pct": 5.0,
+        "num_mode_transitions": -3.0,
+        "availability_pct": 4.0
+      },
+      "normalizers": {
+        "ttff_sec": {"type": "clamp_ratio", "max_val": 60.0, "min_val": 0.0},
+        "fix_rate_pct": {"type": "linear", "scale": 0.01},
+        "num_mode_transitions": {"type": "count_ratio", "base": 20},
+        "availability_pct": {"type": "linear", "scale": 0.01}
+      }
+    },
+    
+    "balanced": {
+      "description": "Balanced weighting across accuracy, robustness, and latency",
+      "weights": {
+        "horizontal_error_rms_m": -5.0,
+        "vertical_error_rms_m": -4.0,
+        "fix_rate_pct": 5.0,
+        "availability_pct": 5.0,
+        "ttff_sec": -4.0,
+        "num_fix_losses": -3.0,
+        "num_mode_transitions": -2.0
+      },
+      "normalizers": {
+        "horizontal_error_rms_m": {"type": "clamp_ratio", "max_val": 1.0, "min_val": 0.0},
+        "vertical_error_rms_m": {"type": "clamp_ratio", "max_val": 1.5, "min_val": 0.0},
+        "fix_rate_pct": {"type": "linear", "scale": 0.01},
+        "availability_pct": {"type": "linear", "scale": 0.01},
+        "ttff_sec": {"type": "clamp_ratio", "max_val": 60.0, "min_val": 0.0},
+        "num_fix_losses": {"type": "count_ratio", "base": 10},
+        "num_mode_transitions": {"type": "count_ratio", "base": 20}
+      }
+    }
+  },
+  
+  "_normalizer_types": {
+    "linear": "value * scale (for percentages: 0-100 -> 0-1)",
+    "clamp_ratio": "clamp(value, min_val, max_val) / max_val (for error metrics: low error = low ratio, high error = high ratio)",
+    "count_ratio": "value / base (for count metrics: 0 events = 0, base events = 1.0)"
+  },
+  
+  "_score_formula": "score = sum(weight_i * normalized_value_i) / sum(|weight_i|). For negative weights (errors, counts), low normalized values give small negative contributions (good). For positive weights (rates), high normalized values give large positive contributions (good)."
+}

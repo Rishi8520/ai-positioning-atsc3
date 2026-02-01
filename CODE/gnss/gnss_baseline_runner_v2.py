@@ -779,8 +779,61 @@ def parse_rtk_pos_file(pos_path: Path) -> List[PositionEpoch]:
 
 def parse_ground_truth(gt_path: Path) -> List[PositionEpoch]:
     """
-    Parse ground truth file (same format as RTKLIB .pos).
+    Parse ground truth file. Supports:
+    - CSV format: epoch,timestamp,lat_deg,lon_deg,height_m,quality,num_sats
+    - RTKLIB .pos format (same as solution files)
     """
+    import csv
+    
+    epochs = []
+    
+    # Check if file exists
+    if not gt_path.exists():
+        _warn(f"Ground truth file not found: {gt_path}")
+        return []
+    
+    # First, check if it's a CSV file with header
+    with open(gt_path, "r", encoding="utf-8") as f:
+        first_line = f.readline().strip()
+    
+    # Check for CSV header
+    if first_line.startswith("epoch,") or "lat_deg" in first_line or "timestamp" in first_line:
+        # Parse as CSV
+        _info(f"Parsing ground truth as CSV: {gt_path}")
+        with open(gt_path, "r", encoding="utf-8", newline="") as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                try:
+                    timestamp = float(row.get("timestamp", row.get("time", 0)))
+                    lat = float(row.get("lat_deg", row.get("lat", row.get("latitude", 0))))
+                    lon = float(row.get("lon_deg", row.get("lon", row.get("longitude", 0))))
+                    height = float(row.get("height_m", row.get("height", row.get("alt", 0))))
+                    quality = int(row.get("quality", row.get("fix_type", 1)))
+                    num_sats = int(row.get("num_sats", row.get("nsv", 12)))
+                    
+                    epochs.append(
+                        PositionEpoch(
+                            timestamp=timestamp,
+                            lat=lat,
+                            lon=lon,
+                            height=height,
+                            quality=quality,
+                            num_sats=num_sats,
+                            sdn=0.0,
+                            sde=0.0,
+                            sdu=0.0,
+                            age=0.0,
+                            ratio=0.0,
+                        )
+                    )
+                except (ValueError, KeyError) as e:
+                    _warn(f"Could not parse CSV row: {row} ({e})")
+                    continue
+        
+        _info(f"Parsed {len(epochs)} ground truth epochs from CSV")
+        return epochs
+    
+    # Fall back to RTKLIB .pos format
     return parse_rtk_pos_file(gt_path)
 
 
@@ -1130,10 +1183,28 @@ def run_rtklib(
         manifest.base_file = str(config.base_obs)
 
     # Select RTKLIB settings based on mode
-    if mode == MODE_AI:
-        rtklib_settings = config.ai_rtklib
-    else:
-        rtklib_settings = config.traditional_rtklib
+    # First, try to load from rtk_profiles.yaml for scenario-specific profiles
+    try:
+        from strict_preflight import load_rtk_profiles, get_profile_settings
+        profiles = load_rtk_profiles()
+        profile_settings = get_profile_settings(
+            profiles, mode, config.intent, scenario_name=config.name
+        )
+        if profile_settings:
+            _info(f"[PROFILE] Using {mode} profile from rtk_profiles.yaml for {config.name}")
+            rtklib_settings = profile_settings
+        else:
+            # Fall back to scenario profile settings
+            if mode == MODE_AI:
+                rtklib_settings = config.ai_rtklib
+            else:
+                rtklib_settings = config.traditional_rtklib
+    except ImportError:
+        # Fall back to scenario profile settings
+        if mode == MODE_AI:
+            rtklib_settings = config.ai_rtklib
+        else:
+            rtklib_settings = config.traditional_rtklib
 
     # Get station coordinates
     station_coords = None
@@ -1413,6 +1484,13 @@ Examples:
         help=f"Root directory for scenarios (default: {DEFAULT_SCENARIO_ROOT})",
     )
 
+    # Strict mode options
+    parser.add_argument(
+        "--auto-crinex-convert",
+        action="store_true",
+        help="Automatically convert CRINEX files to standard RINEX using crx2rnx",
+    )
+
     return parser.parse_args()
 
 
@@ -1423,6 +1501,14 @@ Examples:
 
 def main() -> int:
     """Main entry point."""
+    # Import strict preflight module
+    from strict_preflight import (
+        strict_preflight_check,
+        print_preflight_errors,
+        load_rtk_profiles,
+        get_profile_settings,
+    )
+    
     args = parse_args()
 
     # Determine scenario configuration
@@ -1454,6 +1540,43 @@ def main() -> int:
     if args.scenario:
         output_dir = output_dir / args.scenario
     _ensure_dir(output_dir)
+
+    # STRICT PREFLIGHT VALIDATION
+    # This is the single source of truth - ensures real RINEX data only
+    _info("=" * 60)
+    _info("STRICT PREFLIGHT VALIDATION")
+    _info("=" * 60)
+    
+    # Create temporary run dir for potential CRINEX conversion
+    preflight_run_dir = output_dir / "preflight_temp"
+    
+    preflight_result = strict_preflight_check(
+        rover_obs=config.rover_obs,
+        nav_file=config.nav_file,
+        base_obs=config.base_obs,
+        auto_crinex_convert=args.auto_crinex_convert,
+        run_dir=preflight_run_dir,
+    )
+    
+    if not preflight_result.valid:
+        print_preflight_errors(preflight_result, config.name)
+        return 2  # Exit code 2 for validation failure
+    
+    # Update config with converted paths if CRINEX was converted
+    if preflight_result.rover_path:
+        config.rover_obs = preflight_result.rover_path
+    if preflight_result.base_path:
+        config.base_obs = preflight_result.base_path
+    
+    for warning in preflight_result.warnings:
+        _info(f"[PREFLIGHT] {warning}")
+    
+    _info("[PREFLIGHT] Validation PASSED - all inputs are real RINEX data")
+
+    # Load RTK profiles for profile-driven configuration
+    profiles = load_rtk_profiles()
+    if profiles:
+        _info("[PROFILES] Loaded RTK profiles from rtk_profiles.yaml")
 
     # Run based on mode
     traditional_metrics = None

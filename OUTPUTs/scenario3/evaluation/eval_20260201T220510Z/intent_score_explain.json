@@ -1,0 +1,90 @@
+{
+  "intent": "accuracy",
+  "intent_description": "Prioritize horizontal/vertical accuracy and fix rate",
+  "simulated": true,
+  "simulated_note": "Metrics derived from simulated comparison, not real RTKLIB run",
+  "final_score": 0.0,
+  "formula": "score = sum(weight_i * normalized_value_i) / sum(|weight_i|)",
+  "total_weight": 38.0,
+  "weighted_sum": 0.0,
+  "computation_steps": [
+    "-10.0 * normalize(horizontal_error_rms_m=None) = -10.0 * 0.0 = 0.0",
+    "-5.0 * normalize(horizontal_error_p95_m=None) = -5.0 * 0.0 = 0.0",
+    "-8.0 * normalize(vertical_error_rms_m=None) = -8.0 * 0.0 = 0.0",
+    "-4.0 * normalize(vertical_error_p95_m=None) = -4.0 * 0.0 = 0.0",
+    "+8.0 * normalize(fix_rate_pct=0.0) = +8.0 * 0.0000 = +0.0000",
+    "+3.0 * normalize(availability_pct=0.0) = +3.0 * 0.0000 = +0.0000"
+  ],
+  "breakdown": [
+    {
+      "metric": "horizontal_error_rms_m",
+      "raw_value": null,
+      "normalized_value": 0.0,
+      "weight": -10.0,
+      "weighted_contribution": -0.0,
+      "normalizer_type": "clamp_ratio",
+      "normalizer_params": {
+        "max_val": 1.0,
+        "min_val": 0.0
+      }
+    },
+    {
+      "metric": "horizontal_error_p95_m",
+      "raw_value": null,
+      "normalized_value": 0.0,
+      "weight": -5.0,
+      "weighted_contribution": -0.0,
+      "normalizer_type": "clamp_ratio",
+      "normalizer_params": {
+        "max_val": 2.0,
+        "min_val": 0.0
+      }
+    },
+    {
+      "metric": "vertical_error_rms_m",
+      "raw_value": null,
+      "normalized_value": 0.0,
+      "weight": -8.0,
+      "weighted_contribution": -0.0,
+      "normalizer_type": "clamp_ratio",
+      "normalizer_params": {
+        "max_val": 1.5,
+        "min_val": 0.0
+      }
+    },
+    {
+      "metric": "vertical_error_p95_m",
+      "raw_value": null,
+      "normalized_value": 0.0,
+      "weight": -4.0,
+      "weighted_contribution": -0.0,
+      "normalizer_type": "clamp_ratio",
+      "normalizer_params": {
+        "max_val": 3.0,
+        "min_val": 0.0
+      }
+    },
+    {
+      "metric": "fix_rate_pct",
+      "raw_value": 0.0,
+      "normalized_value": 0.0,
+      "weight": 8.0,
+      "weighted_contribution": 0.0,
+      "normalizer_type": "linear",
+      "normalizer_params": {
+        "scale": 0.01
+      }
+    },
+    {
+      "metric": "availability_pct",
+      "raw_value": 0.0,
+      "normalized_value": 0.0,
+      "weight": 3.0,
+      "weighted_contribution": 0.0,
+      "normalizer_type": "linear",
+      "normalizer_params": {
+        "scale": 0.01
+      }
+    }
+  ]
+}

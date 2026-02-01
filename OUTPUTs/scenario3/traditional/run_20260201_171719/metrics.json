@@ -1,0 +1,30 @@
+{
+  "total_epochs": 300,
+  "fix_epochs": 60,
+  "float_epochs": 125,
+  "single_epochs": 115,
+  "other_epochs": 0,
+  "fix_pct": 20.0,
+  "float_pct": 41.66666666666667,
+  "single_pct": 38.333333333333336,
+  "availability_pct": 61.66666666666667,
+  "total_duration_sec": 299.0,
+  "mean_convergence_sec": 8.275862068965518,
+  "max_convergence_sec": 32.0,
+  "num_convergences": 29,
+  "num_mode_transitions": 119,
+  "num_fix_losses": 29,
+  "accuracy": null,
+  "mean_num_sats": 7.926666666666667,
+  "min_num_sats": 4,
+  "max_num_sats": 13,
+  "synthetic_info": {
+    "synthetic": true,
+    "mode": "traditional",
+    "seed": 42,
+    "method": "deterministic_simulation",
+    "n_epochs": 300,
+    "source": "mode_transitions.csv",
+    "multipath_source": "multipath_profile.json"
+  }
+}

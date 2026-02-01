@@ -1,0 +1,153 @@
+{
+  "run_id": "eval_20260201T220510Z",
+  "scenario": "scenario3",
+  "timestamp": "20260201T220510Z",
+  "simulated": true,
+  "data_source": "UrbanNav-inspired-synthetic",
+  "rover_obs_path": "/Users/anirudhnishtala/Desktop/ai-positioning-atsc3/DATA/scenarios/scenario3/rover.obs",
+  "rover_obs_size_bytes": 1151,
+  "base_obs_path": "/Users/anirudhnishtala/Desktop/ai-positioning-atsc3/DATA/scenarios/scenario3/base.obs",
+  "base_obs_size_bytes": 1151,
+  "nav_file_path": "/Users/anirudhnishtala/Desktop/ai-positioning-atsc3/DATA/scenarios/scenario3/nav.nav",
+  "nav_file_size_bytes": 512,
+  "ground_truth_path": "/Users/anirudhnishtala/Desktop/ai-positioning-atsc3/DATA/scenarios/scenario3/gt.csv",
+  "ground_truth_size_bytes": 29988,
+  "scenario_profile_hash": "f8ca5ac0862164fc",
+  "scenario_profile_snapshot": {
+    "name": "scenario3_vehicle_urban_canyon",
+    "description": "Vehicle navigation - UrbanNav-HK-Data20190428 (Hong Kong, Whampoa (Deep Urban Canyon)). Deep urban canyon with high-rise buildings environment, 600s duration, 2.5km path. Severe multipath, NLOS, frequent mode transitions expected.",
+    "intent": "maximize_reliability_urban",
+    "scenario_type": "vehicle_urban",
+    "files": {
+      "rover_obs": "rover.obs",
+      "nav_file": "nav.nav",
+      "base_obs": "base.obs",
+      "ground_truth": "gt.csv",
+      "rtcm_file": "corrections.rtcm"
+    },
+    "station_coordinates": {
+      "x_ecef": -2419088.6,
+      "y_ecef": 5385355.6,
+      "z_ecef": 2405805.1
+    },
+    "environment": {
+      "sky_view": "limited",
+      "multipath": "severe",
+      "signal_quality": "degraded",
+      "baseline_km": 0.0,
+      "dynamics": "variable",
+      "urban_canyon_depth": "high",
+      "nlos_probability": 0.4,
+      "urban_density": "high"
+    },
+    "traditional_config": {
+      "rtklib": {
+        "pos1-posmode": "kinematic",
+        "pos1-frequency": "l1",
+        "pos1-soltype": "forward",
+        "pos1-navsys": "1",
+        "pos1-elmask": "15",
+        "pos1-ionoopt": "brdc",
+        "pos1-tropopt": "saas",
+        "pos1-dynamics": "on",
+        "pos2-armode": "continuous",
+        "pos2-arthres": "3.0",
+        "pos2-arlockcnt": "0",
+        "pos2-arminfix": "10",
+        "pos2-armaxiter": "1",
+        "pos2-maxage": "30"
+      },
+      "broadcast": {
+        "fec_ldpc_rate": "RATE_8_15",
+        "fec_rs_symbols": 16,
+        "fec_overhead_pct": 15.0,
+        "modulation": "QPSK",
+        "fft_size": "FFT_8K",
+        "guard_interval": "GI_1_8",
+        "update_frequency_hz": 1.0,
+        "tile_resolution": "low",
+        "plp_mode": "fixed"
+      }
+    },
+    "ai_config": {
+      "rtklib": {
+        "pos1-posmode": "kinematic",
+        "pos1-frequency": "l1",
+        "pos1-soltype": "forward",
+        "pos1-navsys": "15",
+        "pos1-elmask": "20",
+        "pos1-ionoopt": "brdc",
+        "pos1-tropopt": "saas",
+        "pos1-dynamics": "on",
+        "pos2-armode": "fix-and-hold",
+        "pos2-arthres": "2.5",
+        "pos2-arlockcnt": "10",
+        "pos2-arminfix": "5",
+        "pos2-armaxiter": "5",
+        "pos2-elmaskhold": "20",
+        "pos2-maxage": "90",
+        "pos2-slipthres": "0.1"
+      },
+      "broadcast": {
+        "fec_ldpc_rate": "RATE_4_15",
+        "fec_rs_symbols": 32,
+        "fec_overhead_pct": 60.0,
+        "modulation": "QPSK",
+        "fft_size": "FFT_8K",
+        "guard_interval": "GI_1_4",
+        "update_frequency_hz": 10.0,
+        "tile_resolution": "high",
+        "plp_mode": "mobile"
+      }
+    },
+    "evaluation": {
+      "accuracy_target_cm": 30.0,
+      "availability_target_pct": 80.0,
+      "convergence_target_sec": 60.0,
+      "target_spectral_efficiency": 0.5,
+      "target_latency_ms": 50.0,
+      "max_fec_overhead_pct": 70.0
+    },
+    "notes": {
+      "challenge": "Maintain positioning availability in severe urban canyon with multipath and NLOS",
+      "ai_advantage": "Multi-constellation for satellite availability, high elevation mask to reject NLOS, fix-and-hold through outages",
+      "traditional_limitation": "Single constellation insufficient satellites, cannot maintain fix through blockage",
+      "expected_characteristics": [
+        "Lower FIX percentage than scenario2",
+        "More FLOAT and SINGLE solutions",
+        "Frequent mode transitions",
+        "Higher position error during NLOS"
+      ]
+    },
+    "synthetic_metadata": {
+      "synthetic": true,
+      "real_data_source": "UrbanNav-inspired-synthetic",
+      "dataset_name": "UrbanNav-HK-Data20190428",
+      "dataset_location": "Hong Kong, Whampoa (Deep Urban Canyon)",
+      "dataset_date": "2019-04-28",
+      "dataset_url": "https://github.com/IPNL-POLYU/UrbanNavDataset",
+      "ground_truth_source": "Synthetic (UrbanNav-inspired)",
+      "ground_truth_accuracy_cm": 5.0,
+      "ground_truth_epochs": 600,
+      "environment_type": "deep_urban_canyon",
+      "challenge_characteristics": [
+        "Severe multipath from building reflections",
+        "Frequent NLOS (Non-Line-of-Sight) conditions",
+        "Limited sky visibility",
+        "Frequent signal blockage",
+        "Expected mode transitions (FIX\u2192FLOAT\u2192SINGLE)"
+      ],
+      "prepared_at": "2026-02-01T19:04:58.607160+00:00",
+      "prepared_by": "populate_scenario3_urbannav.py",
+      "synthetic_fallback": true,
+      "note": "Synthetic fallback - Dropbox download failed"
+    }
+  },
+  "baseline_command": "RTKLIB produced no output: \n\n\n\nerror : no obs data\nno obs data\n                                        \n",
+  "optimised_command": "(simulated from baseline)",
+  "baseline_run_dir": "/Users/anirudhnishtala/Desktop/ai-positioning-atsc3/OUTPUTs/scenario3/evaluation/eval_20260201T220510Z/baseline_run",
+  "optimised_run_dir": "(simulated)",
+  "success": true,
+  "error_message": "",
+  "duration_sec": 0.06
+}

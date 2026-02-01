@@ -698,6 +698,10 @@ Examples:
     p.add_argument("--antenna-height", type=float, default=0.0,
                    help="Antenna height above marker (m)")
     
+    # Strict real-data mode
+    p.add_argument("--strict-real", action="store_true",
+                   help="Fail if real RTCM cannot be generated (no synthetic fallback)")
+    
     return p.parse_args()
 
 
@@ -708,8 +712,12 @@ def main() -> None:
     # Ensure output directory exists
     out_path.parent.mkdir(parents=True, exist_ok=True)
     
-    # Mode 1: Synthetic generation
+    # Mode 1: Synthetic generation (not allowed in strict mode)
     if args.synthetic:
+        if args.strict_real:
+            print("[ERROR] --synthetic not allowed with --strict-real mode")
+            sys.exit(2)
+            
         print(f"[INFO] Generating synthetic RTCM stream...")
         
         # Use CLI coordinates for synthetic (no RINEX to extract from)
@@ -748,10 +756,16 @@ def main() -> None:
         base_obs, nav_file = load_scenario_base_station(scenario_root, args.scenario)
         
         if not base_obs or not nav_file:
+            if args.strict_real:
+                print(f"[ERROR] Scenario '{args.scenario}' has empty/missing base or nav files.")
+                print("        STRICT REAL-DATA MODE: Cannot generate real RTCM without valid inputs.")
+                print("        Provide real RINEX files or remove --strict-real flag.")
+                sys.exit(2)
+            
             print(f"[WARN] Scenario '{args.scenario}' has empty/missing base or nav files.")
             print(f"       Falling back to synthetic RTCM generation.")
             
-            # ✅ FIXED: Use resolved station coordinates for synthetic fallback
+            # Use resolved station coordinates for synthetic fallback
             station = resolve_station_coordinates(
                 scenario_root=scenario_root,
                 scenario=scenario_name,
@@ -787,10 +801,15 @@ def main() -> None:
         sys.exit(1)
     
     if not base_obs.exists() or base_obs.stat().st_size == 0:
+        if args.strict_real:
+            print(f"[ERROR] Base file empty or missing: {base_obs}")
+            print("        STRICT REAL-DATA MODE: Cannot generate real RTCM without valid inputs.")
+            sys.exit(2)
+        
         print(f"[WARN] Base file empty or missing: {base_obs}")
         print("       Falling back to synthetic RTCM generation.")
         
-        # ✅ FIXED: Use resolved station coordinates for synthetic fallback
+        # Use resolved station coordinates for synthetic fallback
         station = resolve_station_coordinates(
             scenario_root=scenario_root,
             scenario=scenario_name,
@@ -813,7 +832,7 @@ def main() -> None:
         print(f"     Output: {out_path}")
         return
     
-    # ✅ CRITICAL: Resolve station coordinates using intelligent fallback chain
+    # CRITICAL: Resolve station coordinates using intelligent fallback chain
     station = resolve_station_coordinates(
         scenario_root=scenario_root,
         scenario=scenario_name,
@@ -833,6 +852,12 @@ def main() -> None:
         print(f"     Station: {station}")
         print(f"     Output: {out_path}")
     else:
+        if args.strict_real:
+            print(f"[ERROR] {msg}")
+            print("        STRICT REAL-DATA MODE: RTKLIB convbin failed and synthetic fallback disabled.")
+            print("        Install RTKLIB convbin or remove --strict-real flag.")
+            sys.exit(2)
+        
         print(f"[WARN] {msg}")
         print("       Falling back to synthetic RTCM generation.")
         config = RTCMGeneratorConfig(

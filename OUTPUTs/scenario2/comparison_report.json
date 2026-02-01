@@ -1,0 +1,73 @@
+{
+  "scenario": "scenario2_vehicle_suburban",
+  "timestamp": "2026-02-02T00:12:32.140574",
+  "traditional": {
+    "total_epochs": 333,
+    "fix_epochs": 0,
+    "float_epochs": 0,
+    "single_epochs": 333,
+    "other_epochs": 0,
+    "fix_pct": 0.0,
+    "float_pct": 0.0,
+    "single_pct": 100.0,
+    "availability_pct": 0.0,
+    "total_duration_sec": 773.0,
+    "mean_convergence_sec": 0.0,
+    "max_convergence_sec": 0.0,
+    "num_convergences": 0,
+    "num_mode_transitions": 0,
+    "num_fix_losses": 0,
+    "accuracy": {
+      "num_epochs_compared": 333,
+      "mean_hpe_m": 17.82270399116112,
+      "rms_hpe_m": 42.430353404415754,
+      "max_hpe_m": 522.9682302190312,
+      "pct95_hpe_m": 57.42617746207577,
+      "mean_vpe_m": 31.121844444444445,
+      "rms_vpe_m": 90.68113207292438,
+      "pct_within_target": 0.0
+    },
+    "mean_num_sats": 4.8258258258258255,
+    "min_num_sats": 2,
+    "max_num_sats": 9
+  },
+  "ai": {
+    "total_epochs": 325,
+    "fix_epochs": 0,
+    "float_epochs": 0,
+    "single_epochs": 325,
+    "other_epochs": 0,
+    "fix_pct": 0.0,
+    "float_pct": 0.0,
+    "single_pct": 100.0,
+    "availability_pct": 0.0,
+    "total_duration_sec": 773.0,
+    "mean_convergence_sec": 0.0,
+    "max_convergence_sec": 0.0,
+    "num_convergences": 0,
+    "num_mode_transitions": 0,
+    "num_fix_losses": 0,
+    "accuracy": {
+      "num_epochs_compared": 325,
+      "mean_hpe_m": 17.15031071163178,
+      "rms_hpe_m": 41.13705497420151,
+      "max_hpe_m": 522.9682302190312,
+      "pct95_hpe_m": 57.36331361328912,
+      "mean_vpe_m": 29.391200615384616,
+      "rms_vpe_m": 86.87323874630175,
+      "pct_within_target": 0.0
+    },
+    "mean_num_sats": 4.867692307692308,
+    "min_num_sats": 2,
+    "max_num_sats": 9
+  },
+  "comparison": {
+    "fix_pct_improvement": 0.0,
+    "availability_improvement": 0.0,
+    "hpe_improvement_m": 0.6723932795293415,
+    "hpe_improvement_pct": 3.77267826398735,
+    "pct_within_target_improvement": 0.0,
+    "fix_loss_reduction": 0,
+    "summary": "No significant improvement observed"
+  }
+}

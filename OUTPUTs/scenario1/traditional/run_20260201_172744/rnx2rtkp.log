@@ -1,0 +1,15 @@
+# RTKLIB rnx2rtkp execution log
+# Command: /Users/anirudhnishtala/RTKLIB/app/rnx2rtkp/gcc/rnx2rtkp -k /Users/anirudhnishtala/Desktop/ai-positioning-atsc3/OUTPUTs/scenario1/traditional/run_20260201_172744/rtklib.conf -o /Users/anirudhnishtala/Desktop/ai-positioning-atsc3/OUTPUTs/scenario1/traditional/run_20260201_172744/solution.pos /Users/anirudhnishtala/Desktop/ai-positioning-atsc3/DATA/scenarios/scenario1/rover.obs /Users/anirudhnishtala/Desktop/ai-positioning-atsc3/DATA/scenarios/scenario1/base.obs /Users/anirudhnishtala/Desktop/ai-positioning-atsc3/DATA/scenarios/scenario1/nav.nav
+# Return code: 0
+# Timestamp: 2026-02-01T17:27:44.473481
+
+=== STDOUT ===
+(empty)
+
+=== STDERR ===
+
+
+
+processing : 1970/01/01 00:00:00 Q=0
+processing : 1970/01/01 00:00:00 Q=0
+                                        

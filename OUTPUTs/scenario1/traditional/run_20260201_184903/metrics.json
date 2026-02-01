@@ -1,0 +1,21 @@
+{
+  "total_epochs": 2880,
+  "fix_epochs": 72,
+  "float_epochs": 2808,
+  "single_epochs": 0,
+  "other_epochs": 0,
+  "fix_pct": 2.5,
+  "float_pct": 97.5,
+  "single_pct": 0.0,
+  "availability_pct": 100.0,
+  "total_duration_sec": 86370.0,
+  "mean_convergence_sec": 5841.818181818182,
+  "max_convergence_sec": 14640.0,
+  "num_convergences": 11,
+  "num_mode_transitions": 22,
+  "num_fix_losses": 11,
+  "accuracy": null,
+  "mean_num_sats": 7.626736111111111,
+  "min_num_sats": 5,
+  "max_num_sats": 10
+}
