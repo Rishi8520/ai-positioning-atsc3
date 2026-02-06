@@ -18,7 +18,8 @@ import sys
 from pathlib import Path
 from typing import Dict, List, Tuple
 
-DEFAULT_SCENARIO_ROOT = Path("DATA/scenarios")
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
+DEFAULT_SCENARIO_ROOT = PROJECT_ROOT / "DATA" / "scenarios"
 
 # Minimum expected file sizes (bytes) - 0 means just must exist
 MIN_FILE_SIZES = {

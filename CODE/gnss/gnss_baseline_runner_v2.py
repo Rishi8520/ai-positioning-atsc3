@@ -71,8 +71,15 @@ from typing import Any, Dict, List, Optional, Tuple
 # Constants / Defaults
 # ----------------------------
 
-DEFAULT_SCENARIO_ROOT = Path(os.getenv("SCENARIO_ROOT", "DATA/scenarios"))
-DEFAULT_RESULTS_ROOT = Path(os.getenv("RESULTS_ROOT", "OUTPUTs"))
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
+DEFAULT_SCENARIO_ROOT = PROJECT_ROOT / "DATA" / "scenarios"
+DEFAULT_RESULTS_ROOT = PROJECT_ROOT / "OUTPUTs"
+
+# Override with environment variables if set
+if os.getenv("SCENARIO_ROOT"):
+    DEFAULT_SCENARIO_ROOT = Path(os.getenv("SCENARIO_ROOT"))
+if os.getenv("RESULTS_ROOT"):
+    DEFAULT_RESULTS_ROOT = Path(os.getenv("RESULTS_ROOT"))
 
 RTKLIB_BINARIES = ["rnx2rtkp"]
 

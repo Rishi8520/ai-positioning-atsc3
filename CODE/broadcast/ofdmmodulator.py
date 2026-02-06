@@ -5,6 +5,7 @@ Generates OFDM signals from framed data.
 Based on ATSC A/322:2017 specification.
 """
 
+from logging import config
 import numpy as np
 import logging
 from typing import Tuple, Optional
@@ -378,39 +379,29 @@ class OFDMModulator:
         return symbols
     
     def _build_ofdm_symbols(
-        self,
-        data_symbols: np.ndarray,
-        pilot_symbols: Optional[np.ndarray],
-        config: FrameConfig
+    self,
+    data_symbols: np.ndarray,
+    pilot_symbols: Optional[np.ndarray],
+    config: FrameConfig
     ) -> np.ndarray:
         """
-        Build OFDM frequency-domain symbols with pilots.
-        
-        Uses ATSC 3.0 carrier allocation tables per A/322 Table 9.1.
-        
-        Args:
-            data_symbols: Modulated data symbols
-            pilot_symbols: Pilot symbols (or None)
-            config: Frame configuration
-        
-        Returns:
-            OFDM symbols (frequency domain) shaped (num_symbols, num_carriers)
+    Build OFDM frequency-domain symbols with pilots.
+    Uses ATSC 3.0 carrier allocation tables per A/322 Table 9.1.
         """
         num_carriers = config.fft_size.value
-        
-        # Get carrier allocation from ATSC 3.0 tables
+    
+    # Get carrier allocation
         allocation = self.CARRIER_ALLOCATION.get(config.fft_size)
         if allocation is None:
-            # Fallback for unknown FFT sizes
             guard_size = int(num_carriers * 0.08)
             active_carriers = num_carriers - 2 * guard_size - 1
         else:
             guard_size = allocation['guard_lower']
             active_carriers = allocation['active']
-        
+    
         dc_index = num_carriers // 2
-        
-        # Account for pilots
+    
+    # Calculate carriers per symbol
         if config.pilots_enabled and pilot_symbols is not None:
             dx, dy = config.pilot_pattern.value
             pilots_per_symbol = active_carriers // dx
@@ -418,73 +409,74 @@ class OFDMModulator:
         else:
             data_carriers_per_symbol = active_carriers
             pilots_per_symbol = 0
-        
-        # Ensure at least 1 carrier
+    
         data_carriers_per_symbol = max(1, data_carriers_per_symbol)
-        
         num_ofdm_symbols = max(1, (len(data_symbols) + data_carriers_per_symbol - 1) // data_carriers_per_symbol)
-        
-        # Initialize OFDM symbol array
+    
+    # Initialize OFDM array
         ofdm_symbols = np.zeros((num_ofdm_symbols, num_carriers), dtype=np.complex64)
-        
-        # Fill symbols
+    
+    # Fill symbols
         data_idx = 0
         pilot_idx = 0
-        
+    
         for sym_idx in range(num_ofdm_symbols):
-            carrier_idx = guard_size  # Start after lower guard band
-            
-            for _ in range(active_carriers):
+            carrier_idx = guard_size
+            active_count = 0  # Count carriers AFTER skipping DC
+        
+            while active_count < active_carriers:
+            # Skip DC carrier
                 if carrier_idx == dc_index:
-                    # DC carrier is null
                     carrier_idx += 1
                     continue
-                
+            
+            # Stop at upper guard
                 if carrier_idx >= num_carriers - guard_size:
-                    # Reached upper guard band
                     break
-                
-                # Check if this is a pilot position
+            
+            # Check if pilot (using count-based position, not carrier index)
                 is_pilot = False
                 if config.pilots_enabled and pilot_symbols is not None:
                     dx, dy = config.pilot_pattern.value
-                    if (carrier_idx - guard_size) % dx == 0 and sym_idx % dy == 0:
+                    if active_count % dx == 0 and sym_idx % dy == 0:
                         is_pilot = True
-                
-                if is_pilot and pilot_symbols is not None and pilot_idx < len(pilot_symbols):
-                    # Insert pilot
+            
+            # Insert pilot or data
+                if is_pilot and pilot_idx < len(pilot_symbols):
                     ofdm_symbols[sym_idx, carrier_idx] = pilot_symbols[pilot_idx]
                     pilot_idx += 1
                 elif data_idx < len(data_symbols):
-                    # Insert data
                     ofdm_symbols[sym_idx, carrier_idx] = data_symbols[data_idx]
                     data_idx += 1
-                
+            
                 carrier_idx += 1
-        
+                active_count += 1
+    
         return ofdm_symbols
     
     def _apply_ifft(
-        self,
-        ofdm_symbols: np.ndarray,
-        fft_size: FFTSize
+    self,
+    ofdm_symbols: np.ndarray,
+    fft_size: FFTSize
     ) -> np.ndarray:
         """
-        Apply IFFT to convert frequency domain to time domain.
-        
-        Args:
-            ofdm_symbols: Frequency domain symbols (num_symbols, num_carriers)
-            fft_size: FFT size
-        
-        Returns:
-            Time domain symbols (num_symbols, fft_size)
+    Apply IFFT to convert frequency domain to time domain.
+    
+    Proper OFDM modulation flow:
+    1. ifftshift to move DC to edge before IFFT
+    2. IFFT to get time-domain signal
+    
+    Args:
+        ofdm_symbols: Frequency domain symbols (num_symbols, num_carriers)
+        fft_size: FFT size
+    
+    Returns:
+        Time domain symbols (num_symbols, fft_size)
         """
-        # Apply IFFT to each OFDM symbol
-        time_domain = np.fft.ifft(ofdm_symbols, axis=1)
-        
-        # IFFT shifts frequency zero to center, need to fftshift for proper OFDM
-        time_domain = np.fft.ifftshift(time_domain, axes=1)
-        
+    # ✅ CORRECT ORDER: ifftshift BEFORE ifft
+        freq_shifted = np.fft.ifftshift(ofdm_symbols, axes=1)
+        time_domain = np.fft.ifft(freq_shifted, axis=1)
+    
         return time_domain
     
     def _add_guard_interval(

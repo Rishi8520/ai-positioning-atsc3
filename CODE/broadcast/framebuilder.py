@@ -11,7 +11,6 @@ import logging
 from typing import List, Optional, Tuple
 from dataclasses import dataclass
 from enum import IntEnum
-
 from broadcast.config import ModulationScheme, GuardInterval, FFTSize, PilotPattern
 from broadcast.fecencoder import FECEncodedData
 from broadcast.utils import get_timestamp_ms
@@ -172,29 +171,33 @@ class FrameBuilder:
         frame_id = self.frame_counter
         self.frame_counter += 1
         
-        # Build frame components
+        # Build frame components...
         preamble = self._build_preamble(config)
         payload = self._build_payload(fec_data.encoded_data, config)
         pilots = self._generate_pilots(config) if config.pilots_enabled else None
-        
-        # Calculate frame parameters
+
+# Calculate frame parameters...
         total_symbols = self._calculate_symbol_count(config)
-        
-        # Create frame metadata
+
+# Create frame metadata...
         metadata = {
-            'fft_size': config.fft_size.value,
-            'guard_interval': config.guard_interval.value,
-            'modulation': config.modulation.name,
-            'frame_duration_ms': config.frame_duration_ms,
-            'pilot_pattern': config.pilot_pattern.name if config.pilots_enabled else 'None',
-            'pilot_boost_db': config.pilot_boost_db,
-            'time_interleaving_depth': config.time_interleaving_depth if config.time_interleaving else 0,
-            'data_symbols': total_symbols - self.BOOTSTRAP_SYMBOLS,
-            'pilot_symbols': self._count_pilot_symbols(config) if config.pilots_enabled else 0,
-            'active_carriers': self._active_carriers(config),
-            'original_data_size': len(fec_data.original_data),
-            'fec_overhead_bytes': fec_data.overhead_bytes,
-            'fec_code_rate': fec_data.code_rate,
+    "fft_size": config.fft_size.value,
+    "guard_interval": config.guard_interval.value,
+    "modulation": config.modulation.name,
+    "frame_duration_ms": config.frame_duration_ms,
+    "pilot_pattern": config.pilot_pattern.name if config.pilots_enabled else None,
+    "pilot_boost_db": config.pilot_boost_db,
+    "time_interleaving_depth": config.time_interleaving_depth if config.time_interleaving else 0,
+    "data_symbols": total_symbols - self.BOOTSTRAP_SYMBOLS,
+    "pilot_symbols": self._count_pilot_symbols(config) if config.pilots_enabled else 0,
+    "active_carriers": self._active_carriers(config),
+    "original_data_size": len(fec_data.original_data),
+    "fec_overhead_bytes": fec_data.overhead_bytes,
+    "fec_code_rate": fec_data.code_rate,
+    "use_alp": False,
+    # CRITICAL: Add these two fields
+    "fec_encoded_len_bytes": len(fec_data.encoded_data),  # ← This is the FEC output length
+    "frame_payload_len_bytes": len(payload),              # ← This is after interleaving + padding
         }
         
         frame = ATSCFrame(
@@ -215,7 +218,10 @@ class FrameBuilder:
             f"Frame {frame_id} built: {frame.total_bytes} bytes, "
             f"{total_symbols} symbols, {frame.metadata['active_carriers']} carriers"
         )
-        
+        # In framebuilder.py build_frame() method, add a debug print:
+        print(f"[DEBUG] fec_data.encoded_data length: {len(fec_data.encoded_data)}")
+        print(f"[DEBUG] payload length: {len(payload)}")
+
         return frame
     
     def _build_preamble(self, config: FrameConfig) -> bytes:
@@ -465,29 +471,26 @@ class FrameBuilder:
     
     def _active_carriers(self, config: FrameConfig) -> int:
         """
-        Get number of active data carriers per ATSC A/322 Table 9.1.
-        
-        Accounts for:
-        - Guard bands (per spec)
-        - DC carrier (null)
-        - Pilot carriers (if enabled)
+    Get number of active data carriers per ATSC A/322 Table 9.1.
+    
+    Accounts for:
+    - Guard bands (already excluded in allocation table)
+    - DC carrier (already excluded in allocation table)
+    - Pilot carriers (if enabled)
         """
         allocation = self.CARRIER_ALLOCATION.get(config.fft_size)
         if allocation is None:
             raise ValueError(f"Unknown FFT size: {config.fft_size}")
-        
-        # Start with active carriers from spec
-        active = allocation['active']
-        
-        # Subtract DC carrier
-        active -= allocation['dc']
-        
-        # Subtract pilot carriers if enabled
+    
+    # Start with active carriers from spec (already excludes guards and DC)
+        active = allocation['active']  # 6913 for FFT_8K
+    
+    # Subtract pilot carriers if enabled
         if config.pilots_enabled:
             dx, dy = config.pilot_pattern.value
             pilots_per_symbol = active // dx
             active -= pilots_per_symbol
-        
+    
         return active
     
     def _count_pilot_symbols(self, config: FrameConfig) -> int:

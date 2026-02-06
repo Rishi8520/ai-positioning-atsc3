@@ -63,6 +63,7 @@ from enum import Enum, auto
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 import numpy as np
+from scipy import special
 from scipy import signal as scipy_signal
 from scipy.interpolate import interp1d
 
@@ -1316,7 +1317,7 @@ class ChannelSimulator:
         if self.config.noise_enabled and self.config.snr_db > 0:
             snr_linear = 10 ** (self.config.snr_db / 10)
             # QPSK BER approximation
-            metrics.estimated_ber = 0.5 * np.erfc(np.sqrt(snr_linear))
+            metrics.estimated_ber = 0.5 * special.erfc(np.sqrt(snr_linear))
             # Packet error rate for 1000-byte packet
             metrics.estimated_packet_error_rate = 1 - (1 - metrics.estimated_ber) ** 8000
         

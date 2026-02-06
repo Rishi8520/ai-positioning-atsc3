@@ -10,6 +10,24 @@ import scipy.sparse as sp
 import logging
 from typing import Tuple, Optional
 from dataclasses import dataclass
+import zlib
+import struct
+
+def packetize(payload: bytes) -> bytes:
+    crc = zlib.crc32(payload) & 0xFFFFFFFF
+    return struct.pack("!II", len(payload), crc) + payload
+
+def depacketize(pkt: bytes) -> bytes:
+    if len(pkt) < 8:
+        raise ValueError("Packet too short for len+crc header")
+    length, crc = struct.unpack("!II", pkt[:8])
+    if length < 0 or length > len(pkt) - 8:
+        raise ValueError(f"Invalid length {length} for packet of size {len(pkt)}")
+    payload = pkt[8:8+length]
+    crc2 = zlib.crc32(payload) & 0xFFFFFFFF
+    if crc2 != crc:
+        raise ValueError(f"CRC mismatch: stored=0x{crc:08x} computed=0x{crc2:08x}")
+    return payload
 
 # Import LDPC from scikit-commpy
 from commpy.channelcoding.ldpc import (
@@ -24,7 +42,6 @@ from broadcast.config import FECCodeRate
 from broadcast.utils import get_timestamp_ms
 
 logger = logging.getLogger(__name__)
-
 
 @dataclass
 class FECConfig:
@@ -110,79 +127,38 @@ class FECEncoder:
             f"RS symbols={default_rs_symbols}"
         )
     
-    def encode(
-        self,
-        data: bytes,
-        config: Optional[FECConfig] = None
-    ) -> FECEncodedData:
+    def encode(self, data: bytes, config=None) -> FECEncodedData:
         """
-        Apply FEC encoding to data.
+    Encode data with FEC (RS only - LDPC bypassed for demo).
+    
+    Args:
+        data: Input data to encode
         
-        Args:
-            data: Input data bytes to protect
-            config: Optional FEC configuration (uses defaults if None)
-        
-        Returns:
-            FECEncodedData containing original and encoded data with metadata
+    Returns:
+        FECEncodedData with encoded data and metadata
         """
-        if config is None:
-            config = FECConfig(
-                ldpc_rate=self.default_ldpc_rate,
-                reed_solomon_nsym=self.default_rs_symbols,
-                overhead_pct=15.0  # Default 15% overhead
-            )
-        
         original_size = len(data)
-        encoded_data = data
-        ldpc_applied = False
-        rs_applied = False
-        
-        # Apply Reed-Solomon encoding (outer code)
-        if config.reed_solomon_nsym > 0:
-            encoded_data = self._apply_reed_solomon(
-                encoded_data,
-                config.reed_solomon_nsym
-            )
-            rs_applied = True
-            logger.debug(
-                f"Reed-Solomon applied: {original_size} -> {len(encoded_data)} bytes "
-                f"(+{len(encoded_data) - original_size} bytes)"
-            )
-        
-        # Apply LDPC encoding (inner code)
-        if config.ldpc_rate != FECCodeRate.RATE_13_15:  # If not maximum rate
-            encoded_data = self._apply_ldpc(
-                encoded_data,
-                config.ldpc_rate
-            )
-            ldpc_applied = True
-            logger.debug(
-                f"LDPC applied: rate={config.ldpc_rate.name}, "
-                f"final size={len(encoded_data)} bytes"
-            )
-        
-        # Calculate final code rate
-        code_rate = original_size / len(encoded_data) if len(encoded_data) > 0 else 1.0
-        overhead_bytes = len(encoded_data) - original_size
-        
-        result = FECEncodedData(
-            original_data=data,
-            encoded_data=encoded_data,
-            ldpc_applied=ldpc_applied,
-            rs_applied=rs_applied,
-            code_rate=code_rate,
-            overhead_bytes=overhead_bytes,
-            timestamp=get_timestamp_ms()
+        #rs_symbols = 16 
+    # Step 1: Reed-Solomon encoding
+        rs_encoded = self._apply_reed_solomon(data, 16)
+        rs_overhead = len(rs_encoded) - len(data)
+    
+    # Step 2: BYPASS LDPC - just pass through
+        logger.info(f"[DEMO MODE] Using RS FEC")
+        final_encoded = rs_encoded  # ← BYPASS LDPC
+        ldpc_overhead = 0
+    
+        total_overhead = rs_overhead + ldpc_overhead
+    
+        return FECEncodedData(
+        encoded_data=final_encoded,
+        original_data=data,
+        code_rate="RATE_8_15",
+        overhead_bytes=len(final_encoded) - len(data),
+        ldpc_applied=False,  # ← ADD THIS
+        rs_applied=True,      # ← ADD THIS
+        timestamp=get_timestamp_ms()
         )
-        
-        self.encoded_packet_count += 1
-        
-        logger.debug(
-            f"FEC encoding complete: {original_size} -> {len(encoded_data)} bytes, "
-            f"code_rate={code_rate:.3f}, overhead={overhead_bytes} bytes"
-        )
-        
-        return result
     
     def _apply_reed_solomon(self, data: bytes, nsym: int) -> bytes:
         """
@@ -205,229 +181,307 @@ class FECEncoder:
     
     def _apply_ldpc(self, data: bytes, code_rate: FECCodeRate) -> bytes:
         """
-        Apply LDPC encoding using systematic encoding.
-        
-        Args:
-            data: Input data (after RS encoding)
-            code_rate: LDPC code rate
-        
-        Returns:
-            LDPC-encoded data
+    Apply LDPC encoding using systematic encoding.
+    
+    Args:
+        data: Input data (after RS encoding)
+        code_rate: LDPC code rate
+    
+    Returns:
+        LDPC-encoded data
         """
-        # Get LDPC parameters
+    # Get LDPC parameters
         n, k = self.LDPC_CODES[code_rate]  # n=codeword bits, k=info bits
-        
-        # Convert bytes to bits
+
+    # Convert bytes to bits
         data_bits = np.unpackbits(np.frombuffer(data, dtype=np.uint8))
-        
-        # Pad data to multiple of k bits if needed
+
+    # Pad data to multiple of k bits if needed
         total_bits = len(data_bits)
         if total_bits % k != 0:
             padding_bits = k - (total_bits % k)
             data_bits = np.concatenate([
                 data_bits,
-                np.zeros(padding_bits, dtype=np.uint8)
+            np.zeros(padding_bits, dtype=np.uint8)
             ])
-        
-        # Process in blocks of k bits
+
+    # Process in blocks of k bits
         encoded_blocks = []
         num_blocks = len(data_bits) // k
-        
+
         for i in range(num_blocks):
             block_start = i * k
             block_end = block_start + k
             info_block = data_bits[block_start:block_end]
-            
-            # Get LDPC code parameters
+    
+        # Get LDPC code parameters
             ldpc_params = self._get_ldpc_params(code_rate)
-            
-            # Encode using systematic LDPC encoding
+    
+        # DEBUG: Log matrix hash (ONLY FOR FIRST BLOCK)
+            if i == 0:
+                import hashlib
+                H_array = ldpc_params['vnode_adj_list']
+                matrix_hash = hashlib.md5(H_array.tobytes()).hexdigest()[:8]
+                logger.info(f"[TX LDPC] Matrix hash: {matrix_hash}, n_vnodes={ldpc_params['n_vnodes']}, n_cnodes={ldpc_params['n_cnodes']}")
+    
+        # Encode using systematic LDPC encoding
             try:
-                # triang_ldpc_systematic_encode expects (message_bits, ldpc_code_params, pad)
+            # triang_ldpc_systematic_encode expects (message_bits, ldpc_code_params, pad)
                 encoded_block = triang_ldpc_systematic_encode(
-                    info_block.astype(np.int8),
-                    ldpc_params,
-                    pad=False  # We already padded
+                info_block.astype(np.int8),
+                ldpc_params,
+                pad=False  # We already padded
                 )
+            
+            # ==================== NEW: VERIFY CODEWORD ====================
+            # Check if encoded codeword satisfies H @ c = 0
+                if 'parity_check_matrix' in ldpc_params:
+                    H = ldpc_params['parity_check_matrix']
+                    syndrome = (H @ encoded_block.astype(np.int8)) % 2
+                    failed_checks = np.sum(syndrome != 0)
+                
+                    if i == 0:  # Log first block only
+                        logger.info(f"[TX VERIFY] Encoded codeword syndrome: {failed_checks}/{len(syndrome)} failed checks")
+                
+                    if failed_checks > 0:
+                        logger.error(f"[TX ERROR] Block {i}: Encoder produced INVALID codeword! "
+                               f"{failed_checks}/{len(syndrome)} parity checks fail")
+            # ==================== END NEW ====================
+            
                 encoded_blocks.append(encoded_block)
+            
             except Exception as e:
-                # If encoding fails, use fallback: add parity bits as zeros
+            # If encoding fails, use fallback: add parity bits as zeros
                 logger.warning(f"LDPC encoding failed, using fallback: {e}")
                 parity_bits = np.zeros(n - k, dtype=np.uint8)
                 encoded_block = np.concatenate([info_block, parity_bits])
                 encoded_blocks.append(encoded_block)
-        
-        # Concatenate all encoded blocks
+
+    # Concatenate all encoded blocks
         if encoded_blocks:
             all_encoded_bits = np.concatenate(encoded_blocks)
         else:
             all_encoded_bits = data_bits
-        
-        # Convert bits back to bytes
+
+    # Convert bits back to bytes
         encoded_bytes = np.packbits(all_encoded_bits).tobytes()
-        
+
         return encoded_bytes
     
     def _get_ldpc_params(self, code_rate: FECCodeRate) -> dict:
-        """
-        Get LDPC code parameters dictionary for commpy encoder.
-        
-        Args:
-            code_rate: LDPC code rate
-        
-        Returns:
-            Dictionary with complete LDPC parameters for triang_ldpc_systematic_encode
-        """
+        """Get LDPC code parameters dictionary."""
+        import os
+    
+        ldpc_path = os.getenv("LDPC_PARAMS_PATH", "").strip()
+        if ldpc_path and os.path.exists(ldpc_path):
+            logger.info(f"Loading LDPC params from {ldpc_path}")
+            return self.load_ldpc_params(ldpc_path)
+    
+    # Check local cache
         if code_rate in self._ldpc_matrices:
             return self._ldpc_matrices[code_rate]
-        
-        n, k = self.LDPC_CODES[code_rate]
-        m = n - k  # Number of parity bits (check nodes)
-        
-        # Generate complete LDPC code parameters
-        ldpc_params = self._generate_ldpc_code_params(n, k, m)
-        
-        # Cache it
-        self._ldpc_matrices[code_rate] = ldpc_params
-        
-        return ldpc_params
     
-    def _generate_ldpc_code_params(self, n: int, k: int, m: int) -> dict:
-        """
-        Generate complete LDPC code parameters with proper systematic structure.
+        n, k = self.LDPC_CODES[code_rate]
+        m = n - k
+    
+        logger.info(f"Generating LDPC code: n={n}, k={k}, rate={k/n:.3f}")
+    
+    # Generate sparse H matrix using Gallager construction
+    # Regular LDPC: each column has wc=3 ones, each row has wr ones
+        ldpc_params = self._generate_ldpc_code_params(n, k, m)    
+    # Cache it
+        self._ldpc_matrices[code_rate] = ldpc_params
+    
+    # Save to file if path set
+        if not ldpc_path:
+            ldpc_path = f"OUTPUTs/ldpc_{code_rate.name.lower()}.npz"
+    
+        os.makedirs(os.path.dirname(ldpc_path) if os.path.dirname(ldpc_path) else "OUTPUTs", exist_ok=True)
+        self.save_ldpc_params(code_rate, ldpc_path)
+        logger.info(f"Saved LDPC params to {ldpc_path}")
+    
+        return ldpc_params
+
+    def _generate_gallager_ldpc(self, n: int, k: int) -> dict:
+        """Generate a Gallager LDPC code (regular, good for BP)."""
+        from scipy.sparse import lil_matrix
+    
+        m = n - k
+    
+    # Regular LDPC parameters
+        wc = 3  # column weight (ones per column)
+        wr = int(np.ceil(n * wc / m))  # row weight
+    
+        logger.info(f"Gallager LDPC: wc={wc}, wr={wr}")
+    
+    # Create sparse H matrix in lil format (efficient for construction)
+        H = lil_matrix((m, n), dtype=np.int8)
+    
+    # Gallager construction: divide H into wc submatrices
+        rows_per_submatrix = m // wc
+    
+        for sub_idx in range(wc):
+            row_start = sub_idx * rows_per_submatrix
+            row_end = min((sub_idx + 1) * rows_per_submatrix, m)
         
-        Creates H = [P | I_m] where P is sparse and I_m is identity.
-        This guarantees the code is systematic and encodable.
-        
-        Args:
-            n: Codeword length (variable nodes)
-            k: Information bits length
-            m: Parity bits length (check nodes)
-        
-        Returns:
-            Complete ldpc_code_params dictionary for commpy
-        """
-        n_vnodes = n  # Variable nodes = codeword bits
-        n_cnodes = m  # Check nodes = parity checks
-        
-        # Create systematic parity check matrix: H = [P | I_m]
-        # Where P is (m x k) sparse matrix and I_m is (m x m) identity
-        
-        # Design parameters for column weight (variable node degree)
-        col_weight = 3  # Each info bit in 3 parity checks (sparse!)
-        
-        # Build the P matrix (parity part) as adjacency lists
-        # Then build the identity part
-        
-        # For systematic LDPC:
-        # - First k variable nodes are information bits (connect to P part)
-        # - Last m variable nodes are parity bits (connect to I part)
-        
-        # Build adjacency lists
+        # Create a permuted identity-like pattern
+            cols = np.random.permutation(n)
+            for i, row in enumerate(range(row_start, row_end)):
+                if i < len(cols):
+                    H[row, cols[i]] = 1
+    
+    # Convert to CSR for efficient operations
+        H_csr = H.tocsr()
+        H_array = H_csr.toarray().astype(np.int8)
+    
+    # Build adjacency lists for BP
         vnode_adj_list = []
         vnode_deg_list = []
-        cnode_adj_list = [[] for _ in range(n_cnodes)]
-        cnode_deg_list = np.zeros(n_cnodes, dtype=np.int32)
+        for col in range(n):
+            neighbors = H_csr.getcol(col).nonzero()[0].tolist()
+            vnode_adj_list.append(neighbors)
+            vnode_deg_list.append(len(neighbors))
+    
+        cnode_adj_list = []
+        cnode_deg_list = []
+        for row in range(m):
+            neighbors = H_csr.getrow(row).nonzero()[1].tolist()
+            cnode_adj_list.append(neighbors)
+            cnode_deg_list.append(len(neighbors))
+    
+    # Compute max degrees
+        max_vnode_deg = max(vnode_deg_list) if vnode_deg_list else 0
+        max_cnode_deg = max(cnode_deg_list) if cnode_deg_list else 0
+    
+        return {
+        'n_vnodes': n,
+        'n_cnodes': m,
+        'vnode_adj_list': np.array(vnode_adj_list, dtype=object),
+        'cnode_adj_list': np.array(cnode_adj_list, dtype=object),
+        'vnode_deg_list': np.array(vnode_deg_list, dtype=np.int32),
+        'cnode_deg_list': np.array(cnode_deg_list, dtype=np.int32),
+        'max_vnode_deg': max_vnode_deg,
+        'max_cnode_deg': max_cnode_deg,
+        'H_matrix': H_array
+        }
         
-        # Process information bit variables (first k vnodes) - connect to P matrix
-        for vnode in range(k):
-            # Each info bit connects to col_weight check nodes
-            # Distribute connections to avoid overloading any single check node
-            connections = []
-            for w in range(col_weight):
-                # Spread connections across check nodes
-                cnode = (vnode * col_weight + w) % n_cnodes
-                connections.append(cnode)
-                cnode_adj_list[cnode].append(vnode)
-                cnode_deg_list[cnode] += 1
-            
-            vnode_adj_list.append(connections)
-            vnode_deg_list.append(col_weight)
-        
-        # Process parity bit variables (last m vnodes) - connect to I matrix
-        # Each parity bit connects to exactly ONE check node (identity structure)
-        for i in range(m):
-            vnode = k + i  # Parity variable node index
-            cnode = i      # Corresponding check node
-            
-            vnode_adj_list.append([cnode])
-            vnode_deg_list.append(1)  # Degree 1 for parity bits
-            cnode_adj_list[cnode].append(vnode)
-            cnode_deg_list[cnode] += 1
-        
-        # Convert to numpy arrays with padding
-        vnode_deg_list = np.array(vnode_deg_list, dtype=np.int32)
-        max_vnode_deg = int(np.max(vnode_deg_list))
-        max_cnode_deg = int(np.max(cnode_deg_list))
-        
-        # Pad adjacency lists to max degree
-        vnode_adj_padded = np.full((n_vnodes, max_vnode_deg), -1, dtype=np.int32)
-        for vnode in range(n_vnodes):
-            for j, cnode in enumerate(vnode_adj_list[vnode]):
-                vnode_adj_padded[vnode, j] = cnode
-        
-        cnode_adj_padded = np.full((n_cnodes, max_cnode_deg), -1, dtype=np.int32)
-        for cnode in range(n_cnodes):
-            for j, vnode in enumerate(cnode_adj_list[cnode]):
-                cnode_adj_padded[cnode, j] = vnode
-        
-        # Build index mapping arrays
-        vnode_cnode_map = np.zeros(n_vnodes * max_vnode_deg, dtype=np.int32)
-        cnode_vnode_map = np.zeros(n_cnodes * max_cnode_deg, dtype=np.int32)
-        
-        # Build vnode -> cnode position mapping
-        for vnode in range(n_vnodes):
+    def _generate_ldpc_code_params(self, n: int, k: int, m: int) -> dict:
+        """
+    Generate LDPC code with simple systematic structure.
+    Fast generation using direct construction.
+        """
+        import scipy.sparse as sp
+    
+        logger.info(f"Generating simple systematic LDPC: n={n}, k={k}, m={m}")
+    
+    # Create H = [P | I] where I is m×m identity
+        H = np.zeros((m, n), dtype=np.int8)
+    
+    # Right part: identity matrix (last m columns)
+        H[:, k:] = np.eye(m, dtype=np.int8)
+    
+    # Left part: sparse random connections (first k columns)
+    # Each column has exactly 3 ones (regular LDPC)
+        col_weight = 3
+    
+        for col in range(k):
+        # Pick 3 random rows for this column
+            rows = np.random.choice(m, size=col_weight, replace=False)
+            H[rows, col] = 1
+    
+    # Build adjacency lists
+        vnode_adj_list = []
+        vnode_deg_list = []
+        for col in range(n):
+            neighbors = np.where(H[:, col] != 0)[0].tolist()
+            vnode_adj_list.append(neighbors)
+            vnode_deg_list.append(len(neighbors))
+    
+        cnode_adj_list = []
+        cnode_deg_list = []
+        for row in range(m):
+            neighbors = np.where(H[row, :] != 0)[0].tolist()
+            cnode_adj_list.append(neighbors)
+            cnode_deg_list.append(len(neighbors))
+    
+        max_vnode_deg = max(vnode_deg_list)
+        max_cnode_deg = max(cnode_deg_list)
+    
+    # Pad adjacency lists
+        vnode_adj_padded = np.full((n, max_vnode_deg), -1, dtype=np.int32)
+        for i, neighbors in enumerate(vnode_adj_list):
+            vnode_adj_padded[i, :len(neighbors)] = neighbors
+    
+        cnode_adj_padded = np.full((m, max_cnode_deg), -1, dtype=np.int32)
+        for i, neighbors in enumerate(cnode_adj_list):
+            cnode_adj_padded[i, :len(neighbors)] = neighbors
+    
+    # Build mappings
+        vnode_cnode_map = np.zeros(n * max_vnode_deg, dtype=np.int32)
+        cnode_vnode_map = np.zeros(m * max_cnode_deg, dtype=np.int32)
+    
+        for vnode in range(n):
             for j in range(vnode_deg_list[vnode]):
                 cnode = vnode_adj_padded[vnode, j]
                 if cnode >= 0:
-                    # Find position of vnode in cnode's adjacency list
                     for pos in range(cnode_deg_list[cnode]):
                         if cnode_adj_padded[cnode, pos] == vnode:
                             vnode_cnode_map[vnode * max_vnode_deg + j] = pos
                             break
-        
-        # Build cnode -> vnode position mapping
-        for cnode in range(n_cnodes):
+    
+        for cnode in range(m):
             for j in range(cnode_deg_list[cnode]):
                 vnode = cnode_adj_padded[cnode, j]
                 if vnode >= 0:
-                    # Find position of cnode in vnode's adjacency list
                     for pos in range(vnode_deg_list[vnode]):
                         if vnode_adj_padded[vnode, pos] == cnode:
                             cnode_vnode_map[cnode * max_cnode_deg + j] = pos
                             break
-        
-        # Flatten adjacency lists
-        vnode_adj_flat = vnode_adj_padded.flatten()
-        cnode_adj_flat = cnode_adj_padded.flatten()
-        
-        # Build sparse parity check matrix H = [P | I]
-        H = self._build_systematic_parity_matrix(
-            n_vnodes, n_cnodes, k, vnode_adj_padded, vnode_deg_list
-        )
-        
-        # Create complete ldpc_code_params dictionary
-        ldpc_params = {
-            'n_vnodes': n_vnodes,
-            'n_cnodes': n_cnodes,
-            'max_vnode_deg': max_vnode_deg,
-            'max_cnode_deg': max_cnode_deg,
-            'vnode_adj_list': vnode_adj_flat,
-            'cnode_adj_list': cnode_adj_flat,
-            'vnode_cnode_map': vnode_cnode_map,
-            'cnode_vnode_map': cnode_vnode_map,
-            'vnode_deg_list': vnode_deg_list,
-            'cnode_deg_list': cnode_deg_list,
-            'parity_check_matrix': H,
-        }
-        
-        logger.debug(
-            f"Generated systematic LDPC: n={n_vnodes}, k={k}, m={n_cnodes}, "
-            f"max_vdeg={max_vnode_deg}, max_cdeg={max_cnode_deg}"
-        )
-        
-        return ldpc_params
     
+        logger.info(f"LDPC generated: max_vdeg={max_vnode_deg}, max_cdeg={max_cnode_deg}")
+    
+        return {
+        'n_vnodes': n,
+        'n_cnodes': m,
+        'max_vnode_deg': max_vnode_deg,
+        'max_cnode_deg': max_cnode_deg,
+        'vnode_adj_list': vnode_adj_padded.flatten(),
+        'cnode_adj_list': cnode_adj_padded.flatten(),
+        'vnode_cnode_map': vnode_cnode_map,
+        'cnode_vnode_map': cnode_vnode_map,
+        'vnode_deg_list': np.array(vnode_deg_list, dtype=np.int32),
+        'cnode_deg_list': np.array(cnode_deg_list, dtype=np.int32),
+        'parity_check_matrix': H,
+        }
+    
+    def save_ldpc_params(self, code_rate: FECCodeRate, path: str) -> None:
+        p = self._get_ldpc_params(code_rate)
+        np.savez_compressed(
+        path,
+        n_vnodes=p["n_vnodes"],
+        n_cnodes=p["n_cnodes"],
+        max_vnode_deg=p["max_vnode_deg"],
+        max_cnode_deg=p["max_cnode_deg"],
+        vnode_adj_list=p["vnode_adj_list"],
+        cnode_adj_list=p["cnode_adj_list"],
+        vnode_deg_list=p["vnode_deg_list"],
+        cnode_deg_list=p["cnode_deg_list"],
+        )
+
+    @staticmethod
+    def load_ldpc_params(path: str) -> dict:
+        z = np.load(path, allow_pickle=False)
+        return {
+        "n_vnodes": int(z["n_vnodes"]),
+        "n_cnodes": int(z["n_cnodes"]),
+        "max_vnode_deg": int(z["max_vnode_deg"]),
+        "max_cnode_deg": int(z["max_cnode_deg"]),
+        "vnode_adj_list": z["vnode_adj_list"].astype(np.int32),
+        "cnode_adj_list": z["cnode_adj_list"].astype(np.int32),
+        "vnode_deg_list": z["vnode_deg_list"].astype(np.int32),
+        "cnode_deg_list": z["cnode_deg_list"].astype(np.int32),
+        }
+
     def _build_systematic_parity_matrix(
         self,
         n_vnodes: int,

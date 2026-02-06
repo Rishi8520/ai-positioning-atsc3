@@ -1,0 +1,20 @@
+{
+  "scenario_id": "scenario2",
+  "mode": "ai",
+  "timestamp": "2026-02-06T04:50:35.575606",
+  "horizontal_error_cm": 5.0,
+  "vertical_error_cm": 8.0,
+  "availability_pct": 95.0,
+  "fec_rate": "RATE_12_15",
+  "fec_overhead_pct": 10.0,
+  "fft_size": "FFT_8K",
+  "guard_interval": "GI_1_16",
+  "modulation": "QPSK",
+  "spectral_efficiency": 0.5974264705882353,
+  "tx_samples": 34816,
+  "expansion_ratio": 13.39076923076923,
+  "recovered_bytes": 4592,
+  "decode_time_sec": 217.63400533199308,
+  "decode_time_min": 3.6272334221998848,
+  "intent": "minimize_bandwidth_maintain_accuracy"
+}

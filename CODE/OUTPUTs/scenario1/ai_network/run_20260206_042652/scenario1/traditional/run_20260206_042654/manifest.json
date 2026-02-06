@@ -1,0 +1,16 @@
+{
+  "run_id": "run_20260206_042654",
+  "scenario_name": "scenario1_drone_rural",
+  "mode": "traditional",
+  "intent": "provide_sub_3cm_accuracy",
+  "timestamp": "2026-02-06T04:26:54.861973",
+  "rtklib_version": "unknown",
+  "config_file": "/media/rishi/New SSD/PROJECT_AND_RESEARCH/BUILD-A-THON_4/CODE/OUTPUTs/scenario1/ai_network/run_20260206_042652/scenario1/traditional/run_20260206_042654/rtklib.conf",
+  "rover_file": "/media/rishi/New SSD/PROJECT_AND_RESEARCH/BUILD-A-THON_4/DATA/scenarios/scenario1/rover_rnx.obs",
+  "base_file": "/media/rishi/New SSD/PROJECT_AND_RESEARCH/BUILD-A-THON_4/DATA/scenarios/scenario1/base_rnx.obs",
+  "nav_file": "/media/rishi/New SSD/PROJECT_AND_RESEARCH/BUILD-A-THON_4/DATA/scenarios/scenario1/nav.nav",
+  "ground_truth_file": "",
+  "success": true,
+  "error_message": "",
+  "duration_sec": 5.075358
+}

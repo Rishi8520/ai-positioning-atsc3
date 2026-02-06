@@ -1,0 +1,16 @@
+{
+  "run_id": "run_20260206_044524",
+  "scenario_name": "scenario2_vehicle_suburban",
+  "mode": "traditional",
+  "intent": "minimize_bandwidth_maintain_accuracy",
+  "timestamp": "2026-02-06T04:45:24.791366",
+  "rtklib_version": "unknown",
+  "config_file": "/media/rishi/New SSD/PROJECT_AND_RESEARCH/BUILD-A-THON_4/CODE/OUTPUTs/scenario2/ai_network/run_20260206_044522/scenario2/traditional/run_20260206_044524/rtklib.conf",
+  "rover_file": "/media/rishi/New SSD/PROJECT_AND_RESEARCH/BUILD-A-THON_4/DATA/scenarios/scenario2/rover.obs",
+  "base_file": "/media/rishi/New SSD/PROJECT_AND_RESEARCH/BUILD-A-THON_4/DATA/scenarios/scenario2/base.obs",
+  "nav_file": "/media/rishi/New SSD/PROJECT_AND_RESEARCH/BUILD-A-THON_4/DATA/scenarios/scenario2/nav.nav",
+  "ground_truth_file": "/media/rishi/New SSD/PROJECT_AND_RESEARCH/BUILD-A-THON_4/DATA/scenarios/scenario2/gt.csv",
+  "success": true,
+  "error_message": "",
+  "duration_sec": 1.065251
+}

@@ -8,14 +8,14 @@ from enum import Enum
 from typing import Optional
 
 # ATSC 3.0 Physical Layer Parameters
-class ModulationScheme(Enum):
-    """ATSC 3.0 modulation schemes."""
-    QPSK = "QPSK"
-    QAM_16 = "16-QAM"
-    QAM_64 = "64-QAM"
-    QAM_256 = "256-QAM"
-    QAM_1024 = "1024-QAM"
-    QAM_4096 = "4096-QAM"
+#class ModulationScheme(Enum):
+#    """ATSC 3.0 modulation schemes."""
+#    QPSK = "QPSK"
+#    QAM_16 = "16-QAM"
+#    QAM_64 = "64-QAM"
+#    QAM_256 = "256-QAM"
+#    QAM_1024 = "1024-QAM"
+#    QAM_4096 = "4096-QAM"
 
 class FECCodeRate(Enum):
     """Forward Error Correction code rates."""

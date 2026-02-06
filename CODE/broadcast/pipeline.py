@@ -8,8 +8,10 @@ Orchestrates: FEC Encoder → Frame Builder → OFDM Modulator
 import logging
 import numpy as np 
 from typing import List, Optional
+import struct
 from dataclasses import dataclass
 
+from broadcast import config
 from broadcast.fecencoder import FECEncoder, FECConfig, FECEncodedData
 from broadcast.framebuilder import FrameBuilder, FrameConfig, ATSCFrame
 from broadcast.ofdmmodulator import OFDMModulator, OFDMSignal
@@ -161,74 +163,97 @@ class BroadcastPipeline:
         )
     
     def process(
-        self,
-        data: bytes,
-        config: Optional[BroadcastConfig] = None
+    self,
+    data: bytes,
+    config: Optional[BroadcastConfig] = None
     ) -> BroadcastResult:
         """
-        Process data through complete broadcast pipeline.
-        
-        Args:
-            data: Raw input data (e.g., RTCM corrections)
-            config: Optional custom configuration (uses pipeline default if None)
-        
-        Returns:
-            BroadcastResult with all intermediate and final outputs
+    Process data through complete broadcast pipeline.
+    
+    Args:
+        data: Raw input data (e.g., RTCM corrections)
+        config: Optional custom configuration (uses pipeline default if None)
+    
+    Returns:
+        BroadcastResult with all intermediate and final outputs
         """
         start_time = get_timestamp_ms()
-        
-        # Use custom config or default
+    
+    # Use custom config or default
         if config is None:
             config = self.config
-
-        # Step 0: ALP Encapsulation (if enabled)
+    
+        # Step 0: Encapsulation
         alp_packet = None
         if config.use_alp and self.alp_encoder:
+        # ALP encapsulation (includes length in ALP header)
             logger.debug(f"Step 0: ALP encapsulation of {len(data)} bytes")
             alp_packet = self.alp_encoder.encode_rtcm(data)
             data_to_encode = alp_packet.to_bytes()
         else:
-            data_to_encode = data
+        # No ALP: prepend length header + CRC32 (ATSC 3.0 style)
+            import zlib
+            logger.debug(f"Step 0: Adding length header + CRC32 (no ALP)")
         
-        # Step 1: FEC Encoding
-        logger.debug(f"Step 1: FEC encoding {len(data)} bytes")
-        fec_result = self.fec_encoder.encode(data, config.get_fec_config())
+        # Compute CRC32 of payload
+            crc32 = zlib.crc32(data) & 0xFFFFFFFF
         
-        # Step 2: Frame Building
+        # Build header: 4-byte length + 4-byte CRC
+            length_header = struct.pack('!I', len(data))  # Big-endian 32-bit length
+            crc_header = struct.pack('!I', crc32)          # Big-endian 32-bit CRC
+        
+            data_to_encode = length_header + crc_header + data
+        
+            logger.debug(
+            f"  Original: {len(data)} bytes → "
+            f"With header: {len(data_to_encode)} bytes "
+            f"(length={len(data)}, CRC=0x{crc32:08x})"
+            )
+    
+    # Step 1: FEC Encoding
+        logger.debug(f"Step 1: FEC encoding {len(data_to_encode)} bytes")
+        fec_result = self.fec_encoder.encode(data_to_encode, config.get_fec_config())
+    
+    # Step 2: Frame Building
         logger.debug(f"Step 2: Building ATSC 3.0 frame")
         frame = self.frame_builder.build_frame(fec_result, config.get_frame_config())
-        
-        # Step 3: OFDM Modulation
+        if config.use_alp and alp_packet is not None:
+            frame.metadata['uses_alp'] = True
+        else:
+            frame.metadata['uses_alp'] = False
+    
+    # Step 3: OFDM Modulation
         logger.debug(f"Step 3: OFDM modulation")
         signal = self.ofdm_modulator.modulate(frame, config.get_frame_config())
-        
-        # Calculate processing time
+    
+    # Calculate processing time
         end_time = get_timestamp_ms()
         processing_time = end_time - start_time
-        
-        # Update statistics
+    
+    # Update statistics
         self.packets_processed += 1
         self.total_input_bytes += len(data)
         self.total_output_bytes += signal.num_samples * 8  # Complex64 = 8 bytes
-        
-        # Create result
+    
+    # Create result
         result = BroadcastResult(
-            original_data=data,
-            alp_packet=alp_packet,
-            fec_result=fec_result,
-            frame=frame,
-            signal=signal,
-            timestamp=start_time,
-            processing_time_ms=processing_time
+        original_data=data,
+        alp_packet=alp_packet,
+        fec_result=fec_result,
+        frame=frame,
+        signal=signal,
+        timestamp=start_time,
+        processing_time_ms=processing_time
         )
-        
+    
         logger.info(
-            f"Pipeline processed packet: "
-            f"{len(data)} bytes → {signal.num_samples} samples "
-            f"in {processing_time:.2f} ms"
-            f"{' (with ALP)' if alp_packet else ''}"
+        f"Pipeline processed packet: "
+        f"{len(data)} bytes → {len(data_to_encode)} bytes (encoded) → "
+        f"{signal.num_samples} samples "
+        f"in {processing_time:.2f} ms"
+        f"{' (with length header)' if not config.use_alp else ' (with ALP)'}"
         )
-        
+    
         return result
     
     def process_batch(
